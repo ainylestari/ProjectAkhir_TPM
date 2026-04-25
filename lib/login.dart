@@ -152,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("Sign In"),
+                        : const Text("Sign In", style: TextStyle(color: Colors.white)),
                   ),
                 ),
 
@@ -167,11 +167,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       onTap: () {
                         Navigator.pushNamed(context, '/register');
                       },
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: const Text(
+                          "Sign Up",
+                          style: TextStyle(
+                            color: Colors.purple,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

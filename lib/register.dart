@@ -25,6 +25,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    if (password.length < 6) {
+      showError("Password minimal 6 karakter");
+      return;
+    }
+
     showError("Register berhasil, silakan login");
 
     await Future.delayed(const Duration(seconds: 1));
@@ -176,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     child: const Text(
                       "Register",
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                 ),
@@ -192,11 +197,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onTap: () {
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: const Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Colors.purple,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '/screens/recommendation.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -9,10 +10,10 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("MoodMate"),
         backgroundColor: Colors.purple,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             onPressed: () {
-              /// LOGOUT
               Navigator.pushReplacementNamed(context, '/login');
             },
             icon: const Icon(Icons.logout),
@@ -48,37 +49,38 @@ class HomeScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                moodItem("😄", "Happy"),
-                moodItem("😐", "Neutral"),
-                moodItem("😢", "Sad"),
-                moodItem("😡", "Angry"),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            /// FEATURE CARDS
-            const Text(
-              "Quick Actions",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              children: [
-                featureCard(Icons.book, "Journal"),
-                featureCard(Icons.self_improvement, "Meditation"),
-                featureCard(Icons.music_note, "Music"),
-                featureCard(Icons.sports_esports, "Activities"),
+                moodItem("😄", "Happy", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Recommendation(mood: "Happy"),
+                    ),
+                  );
+                }),
+                moodItem("😐", "Neutral", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Recommendation(mood: "Neutral"),
+                    ),
+                  );
+                }),
+                moodItem("😢", "Sad", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Recommendation(mood: "Sad"),
+                    ),
+                  );
+                }),
+                moodItem("😡", "Angry", () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Recommendation(mood: "Angry"),
+                    ),
+                  );
+                }),
               ],
             ),
 
@@ -103,6 +105,31 @@ class HomeScreen extends StatelessWidget {
               "Listen to relaxing music",
               "Calm your mind with soft tunes",
             ),
+
+            const SizedBox(height: 30),
+
+            /// Quick action CARDS
+            const Text(
+              "Quick Actions",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Column(
+              children: [
+                quickActionCard(Icons.sparkle, "AI Mood Survey", [Colors.blue, Colors.blueAccent]),
+                quickActionCard(Icons.book, "Journal", [Colors.green, Colors.greenAccent]),
+                quickActionCard(Icons.music_note, "Music", [Colors.purple, Colors.purpleAccent]),
+                quickActionCard(Icons.sports_esports, "Activities", [Colors.red, Colors.redAccent]),
+              ],
+            ),
+
+            
+
           ],
         ),
       ),
@@ -110,24 +137,30 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// WIDGET: Mood Item
-  Widget moodItem(String emoji, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.purple.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Text(emoji, style: const TextStyle(fontSize: 24)),
+  Widget moodItem(String emoji, String label, VoidCallback onTap) {
+    return MouseRegion(
+    cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap, // Memanggil fungsi saat diklik
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Text(emoji, style: const TextStyle(fontSize: 24)),
+            ),
+            const SizedBox(height: 5),
+            Text(label),
+          ],
         ),
-        const SizedBox(height: 5),
-        Text(label),
-      ],
+      ),
     );
   }
 
-  /// WIDGET: Feature Card
+  /// WIDGET: Feature Card (sementara ga kepake)
   Widget featureCard(IconData icon, String title) {
     return Container(
       decoration: BoxDecoration(
@@ -182,6 +215,58 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// quick action Card
+  Widget quickActionCard(IconData icon, String title, List<Color> colors) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: colors,
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(20), // Sesuaikan kebulatannya
+            boxShadow: [
+              BoxShadow(
+                color: colors.last.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Icon(icon, color: Colors.white, size: 28),
+              ),
+              const SizedBox(width: 20),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -8,32 +8,10 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    const home(),
-    const ExplorePage(),
-    const MoodPlanPage(),
-    const ToolsPage(),
-    const ProfilePage(),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("MoodMate"),
-        backgroundColor: Colors.purple,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            icon: const Icon(Icons.logout),
-          )
-        ],
-      ),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -41,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            /// GREETING
+            /// greet
             const Text(
               "Hi there 👋",
               style: TextStyle(
@@ -59,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            /// MOOD SELECTOR
+            /// mood
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -67,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Recommendation(mood: "Happy"),
+                      builder: (context) => const RecommendationScreen(mood: "Happy"),
                     ),
                   );
                 }),
@@ -75,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Recommendation(mood: "Neutral"),
+                      builder: (context) => const RecommendationScreen(mood: "Neutral"),
                     ),
                   );
                 }),
@@ -83,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Recommendation(mood: "Sad"),
+                      builder: (context) => const RecommendationScreen(mood: "Sad"),
                     ),
                   );
                 }),
@@ -91,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Recommendation(mood: "Angry"),
+                      builder: (context) => const RecommendationScreen(mood: "Angry"),
                     ),
                   );
                 }),
@@ -100,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 30),
 
-            /// RECOMMENDATION
+            /// rekomen
             const Text(
               "Recommended for you",
               style: TextStyle(
@@ -122,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 30),
 
-            /// Quick action CARDS
+            /// Quick action
             const Text(
               "Quick Actions",
               style: TextStyle(
@@ -135,10 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Column(
               children: [
-                quickActionCard(Icons.auto_awesome_rounded, "AI Mood Survey", [Colors.blue, Colors.blueAccent]),
-                quickActionCard(Icons.book, "Journal", [Colors.green, Colors.greenAccent]),
-                quickActionCard(Icons.music_note, "Music", [Colors.purple, Colors.purpleAccent]),
-                quickActionCard(Icons.directions_run_rounded, "Explore", [Colors.red, Colors.redAccent]),
+                quickActionCard(Icons.auto_awesome_rounded, "AI Mood Survey", [Colors.indigo, Colors.indigoAccent.shade200]),
+                quickActionCard(Icons.book, "Journal", [Colors.purple, Colors.purple.shade300]),
+                quickActionCard(Icons.music_note, "Music", [Colors.pink, Colors.pink.shade300]),
+                quickActionCard(Icons.location_on_rounded, "Explore Places", [Colors.orange.shade600, Colors.orange.shade300]),
               ],
             ),
 
@@ -147,51 +125,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-
-      /// navbar
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        indicatorColor: Colors.purple.withOpacity(0.1), 
-        backgroundColor: Colors.white,
-        destinations: const [
-          NavigationDestination(
-            selectedIcon: Icon(Icons.home, color: Colors.purple),
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            label: 'Explore',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Mood Plan',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.build_outlined),
-            label: 'Tools',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
-          ),
-        ],
-      ),
-
     );
   }
 
-  /// WIDGET: Mood Item
+  /// Mood Item
   Widget moodItem(String emoji, String label, VoidCallback onTap) {
     return MouseRegion(
     cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: onTap, // Memanggil fungsi saat diklik
+        onTap: onTap,
         child: Column(
           children: [
             Container(
@@ -210,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// WIDGET: Feature Card (sementara ga kepake)
+  /// Feature Card (sementara ga kepake)
   Widget featureCard(IconData icon, String title) {
     return Container(
       decoration: BoxDecoration(
@@ -230,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// WIDGET: Recommendation Card
+  /// recommendation card
   Widget recommendationCard(String title, String subtitle) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -240,8 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.3),
             blurRadius: 5,
+            offset: const Offset(0, 3),
           )
         ],
       ),
@@ -257,9 +200,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   title,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
+
+                const SizedBox(height: 5),
+
                 Text(
                   subtitle,
-                  style: const TextStyle(color: Colors.grey),
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
             ),

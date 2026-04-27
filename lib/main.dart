@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '/login.dart';
-import '/register.dart';
-import 'screens/home.dart';
+import 'screens/login.dart';
+import 'screens/register.dart';
+import 'screens/navigation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'MoodMate',
       theme: ThemeData(
         primarySwatch: Colors.purple,
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: const Color.fromARGB(255, 255, 244, 255),
         fontFamily: 'Roboto',
       ),
 
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => const Navigation(),
       },
     );
   }

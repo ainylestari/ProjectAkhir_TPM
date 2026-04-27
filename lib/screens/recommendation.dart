@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-class Recommendation extends StatelessWidget {
+class RecommendationScreen extends StatelessWidget {
   final String mood;
 
-  const Recommendation({super.key, required this.mood});
+  const RecommendationScreen({super.key, required this.mood});
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +76,9 @@ Widget recommendationCard(String title, String subtitle) {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.3),
             blurRadius: 5,
+            offset: const Offset(0, 3),
           )
         ],
       ),
@@ -91,11 +92,14 @@ Widget recommendationCard(String title, String subtitle) {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
+
+                const SizedBox(height: 5),
+
                 Text(
                   subtitle,
-                  style: const TextStyle(color: Colors.grey),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
               ],
             ),

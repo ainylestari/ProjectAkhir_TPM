@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class PlannerScreen extends StatelessWidget {
-  const PlannerScreen({super.key});
+class ToolsScreen extends StatelessWidget {
+  const ToolsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,7 @@ class PlannerScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Mood Planner",
+              "Tools",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,

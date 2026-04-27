@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const home(),
+    const ExplorePage(),
+    const MoodPlanPage(),
+    const ToolsPage(),
+    const ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -121,10 +135,10 @@ class HomeScreen extends StatelessWidget {
 
             Column(
               children: [
-                quickActionCard(Icons.sparkle, "AI Mood Survey", [Colors.blue, Colors.blueAccent]),
+                quickActionCard(Icons.auto_awesome_rounded, "AI Mood Survey", [Colors.blue, Colors.blueAccent]),
                 quickActionCard(Icons.book, "Journal", [Colors.green, Colors.greenAccent]),
                 quickActionCard(Icons.music_note, "Music", [Colors.purple, Colors.purpleAccent]),
-                quickActionCard(Icons.sports_esports, "Activities", [Colors.red, Colors.redAccent]),
+                quickActionCard(Icons.directions_run_rounded, "Explore", [Colors.red, Colors.redAccent]),
               ],
             ),
 
@@ -133,6 +147,42 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
+
+      /// navbar
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        indicatorColor: Colors.purple.withOpacity(0.1), 
+        backgroundColor: Colors.white,
+        destinations: const [
+          NavigationDestination(
+            selectedIcon: Icon(Icons.home, color: Colors.purple),
+            icon: Icon(Icons.home_outlined),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.explore_outlined),
+            label: 'Explore',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today_outlined),
+            label: 'Mood Plan',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.build_outlined),
+            label: 'Tools',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
+          ),
+        ],
+      ),
+
     );
   }
 

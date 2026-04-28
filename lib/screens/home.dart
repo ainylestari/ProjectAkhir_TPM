@@ -18,12 +18,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            /// greet
             const Text(
               "Hi there 👋",
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -113,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Column(
               children: [
-                quickActionCard(Icons.auto_awesome_rounded, "AI Mood Survey", [Colors.indigo, Colors.indigoAccent.shade200]),
+                quickActionCard(Icons.auto_awesome_rounded, "AI Mood Chat", [Colors.indigo, Colors.indigoAccent.shade200]),
                 quickActionCard(Icons.book, "Journal", [Colors.purple, Colors.purple.shade300]),
                 quickActionCard(Icons.music_note, "Music", [Colors.pink, Colors.pink.shade300]),
                 quickActionCard(Icons.location_on_rounded, "Explore Places", [Colors.orange.shade600, Colors.orange.shade300]),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '/screens/home.dart';
 import '/screens/explore.dart';
 import '/screens/planner.dart';
-import '/screens/tools.dart';
+import '/screens/journal.dart';
 import '/screens/profile.dart';
 
 
@@ -20,7 +20,7 @@ class _NavigationState extends State<Navigation> {
     const HomeScreen(),
     const ExploreScreen(),
     const PlannerScreen(),
-    const ToolsScreen(),
+    const JournalScreen(),
     const ProfileScreen(),
   ];
 
@@ -40,27 +40,27 @@ class _NavigationState extends State<Navigation> {
         backgroundColor: Colors.white,
         destinations: const [
           NavigationDestination(
-            selectedIcon: Icon(Icons.home, color: Colors.purple),
+            selectedIcon: Icon(Icons.home_rounded, color: Colors.purple),
             icon: Icon(Icons.home_outlined),
             label: 'Home',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.explore, color: Colors.purple),
+            selectedIcon: Icon(Icons.explore_rounded, color: Colors.purple),
             icon: Icon(Icons.explore_outlined),
             label: 'Explore',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.calendar_today, color: Colors.purple),
+            selectedIcon: Icon(Icons.calendar_today_rounded, color: Colors.purple),
             icon: Icon(Icons.calendar_today_outlined),
             label: 'Mood Plan',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.build, color: Colors.purple),
-            icon: Icon(Icons.build_outlined),
-            label: 'Tools',
+            selectedIcon: Icon(Icons.book_rounded, color: Colors.purple),
+            icon: Icon(Icons.book_outlined),
+            label: 'Journals',
           ),
           NavigationDestination(
-            selectedIcon: Icon(Icons.person, color: Colors.purple),
+            selectedIcon: Icon(Icons.person_rounded, color: Colors.purple),
             icon: Icon(Icons.person_outline),
             label: 'Profile',
           ),

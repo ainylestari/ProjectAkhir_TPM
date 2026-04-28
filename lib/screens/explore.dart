@@ -14,7 +14,7 @@ class ExploreScreen extends StatelessWidget {
             const Text(
               "Explore",
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -36,7 +36,7 @@ Widget searchBar() {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(25),
+      borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.3),

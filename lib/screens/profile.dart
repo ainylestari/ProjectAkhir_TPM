@@ -14,7 +14,7 @@ class ProfileScreen extends StatelessWidget {
             const Text(
               "Profile",
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ToolsScreen extends StatelessWidget {
-  const ToolsScreen({super.key});
+class JournalScreen extends StatelessWidget {
+  const JournalScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,9 +12,9 @@ class ToolsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Tools",
+              "Journals",
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),

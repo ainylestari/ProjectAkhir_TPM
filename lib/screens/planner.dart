@@ -33,9 +33,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
+            const SizedBox(height: 5),
+
             const Text(
               "Plan your activities day by day",
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(color: Colors.grey),
             ),
               
             const SizedBox(height: 30),
@@ -60,9 +63,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   //kiri
                   IconButton(
                     onPressed: () => _changeDate(-1),
-                    icon: const Icon(Icons.chevron_left, color: Colors.purple),
+                    icon: const Icon(Icons.chevron_left, color: Colors.red),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.purple.withOpacity(0.1),
+                      backgroundColor: Colors.red.withOpacity(0.1),
                     ),
                   ),
                   
@@ -75,7 +78,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A2E44),
                         ),
                       ),
                       Text(
@@ -88,9 +90,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   //kanan
                   IconButton(
                     onPressed: () => _changeDate(1),
-                    icon: const Icon(Icons.chevron_right, color: Colors.purple),
+                    icon: const Icon(Icons.chevron_right, color: Colors.red),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.purple.withOpacity(0.1),
+                      backgroundColor: Colors.red.withOpacity(0.1),
                     ),
                   ),
                 ],
@@ -99,14 +101,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
             const SizedBox(height: 30),
               
-            recommendationCard(
+            regCard(
               "Schedule Activity", 
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => PlannerDetailScreen(detail: _selectedDate)));
+                Navigator.push(context, MaterialPageRoute(builder: (_) => PlannerDetailScreen(plannerdetail: _selectedDate)));
               },
               elementColor: Colors.white, 
-              bgColor: Colors.purple, 
-              bg2Color: Colors.purple.shade300),
+              bgColor: Colors.red, 
+              bg2Color: Colors.red.shade300
+            ),
           ],
         ),
       ),
@@ -115,7 +118,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
 }
 
 // card
-Widget recommendationCard(String title, {
+Widget regCard(String title, {
   required VoidCallback onTap,
   Color elementColor = Colors.purple, 
   Color bgColor = Colors.white,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
+import '/screens/journal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -112,8 +113,17 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               children: [
                 quickActionCard(Icons.auto_awesome_rounded, "AI Mood Chat", [Colors.indigo, Colors.indigoAccent.shade200]),
-                quickActionCard(Icons.book, "Journal", [Colors.purple, Colors.purple.shade300]),
+                
+                quickActionCard(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => JournalScreen));
+                  },
+                  Icons.book, "Journal", 
+                  [Colors.purple, Colors.purple.shade300]
+                ),
+                
                 quickActionCard(Icons.music_note, "Music", [Colors.pink, Colors.pink.shade300]),
+
                 quickActionCard(Icons.location_on_rounded, "Explore Places", [Colors.orange.shade600, Colors.orange.shade300]),
               ],
             ),
@@ -214,13 +224,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// quick action Card
-  Widget quickActionCard(IconData icon, String title, List<Color> colors) {
+  Widget quickActionCard(IconData icon, String title, List<Color> colors, {VoidCallback? onTap}) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () {
-          
-        },
+        onTap: onTap,
         child: Container(
           margin: const EdgeInsets.only(bottom: 15),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -230,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
-            borderRadius: BorderRadius.circular(20), // Sesuaikan kebulatannya
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
                 color: colors.last.withOpacity(0.3),

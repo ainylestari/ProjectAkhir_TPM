@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-class PlannerDetailScreen extends StatefulWidget {
-  final DateTime plannerdetail;
+class JournalDetailScreen extends StatefulWidget {
+  final DateTime journaldetail;
 
-  const PlannerDetailScreen({super.key, required this.plannerdetail});
+  const JournalDetailScreen({super.key, required this.journaldetail});
 
   @override
-  State<PlannerDetailScreen> createState() => _PlannerDetailScreenState();
+  State<JournalDetailScreen> createState() => _JournalDetailScreenState();
 }
 
-class _PlannerDetailScreenState extends State<PlannerDetailScreen> {
+class _JournalDetailScreenState extends State<JournalDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

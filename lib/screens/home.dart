@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 
                 quickActionCard(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => JournalScreen));
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => JournalScreen()),);
                   },
                   Icons.book, "Journal", 
                   [Colors.purple, Colors.purple.shade300]

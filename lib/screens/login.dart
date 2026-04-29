@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final AuthService authService = AuthService();
 
   bool showPassword = false;
   bool isLoading = false;
@@ -23,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
-    /// VALIDASI
     if (email.isEmpty || password.isEmpty) {
       showError("Email dan password wajib diisi");
       return;
@@ -39,19 +40,30 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    /// LOADING START
     setState(() => isLoading = true);
 
     try {
-      /// SIMULASI API CALL
-      await Future.delayed(const Duration(seconds: 2));
+      final user = await authService.login(
+        email: email,
+        password: password,
+      );
 
-      /// SUCCESS
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      if (user != null) {
+        showError("Login berhasil");
 
+        await Future.delayed(const Duration(seconds: 1));
+
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+        );
+      } else {
+        showError("Email atau password salah");
+      }
     } catch (e) {
-      showError(e.toString().replaceAll("Exception: ", ""));
+      showError("Login gagal");
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
@@ -63,6 +75,13 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override

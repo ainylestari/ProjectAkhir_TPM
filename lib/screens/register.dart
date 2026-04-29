@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,13 +13,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final AuthService authService = AuthService();
 
   bool showPassword = false;
   bool showConfirmPassword = false;
 
   Future<void> handleRegister() async {
-    String password = passwordController.text;
-    String confirmPassword = confirmPasswordController.text;
+    String username = nameController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+    String confirmPassword = confirmPasswordController.text.trim();
+
+    if (username.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      showError("Semua field wajib diisi");
+      return;
+    }
 
     if (password != confirmPassword) {
       showError("Password tidak sama");
@@ -30,18 +42,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    showError("Register berhasil, silakan login");
+    String result = await authService.register(
+      username: username,
+      email: email,
+      password: password,
+    );
 
-    await Future.delayed(const Duration(seconds: 1));
+    showError(result);
 
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/login');
+    if (result == "Register Success") {
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (!mounted) return;
+
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   void showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
   }
 
   @override

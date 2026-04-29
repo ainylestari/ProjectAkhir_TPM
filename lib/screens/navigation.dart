@@ -16,18 +16,25 @@ class Navigation extends StatefulWidget {
 class _NavigationState extends State<Navigation> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const HomeScreen(),
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+    HomeScreen(action: (index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }),
     const ExploreScreen(),
     const PlannerScreen(),
     const JournalScreen(),
     const ProfileScreen(),
   ];
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
 
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,

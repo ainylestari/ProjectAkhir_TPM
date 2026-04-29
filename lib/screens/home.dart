@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
-import '/screens/journal.dart';
+import '/screens/navigation.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Function(int) action;
+  
+  const HomeScreen({super.key, required this.action});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -60,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const RecommendationScreen(mood: "Sad"),
+                      builder: (context) => RecommendationScreen(mood: "Sad"),
                     ),
                   );
                 }),
@@ -68,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const RecommendationScreen(mood: "Angry"),
+                      builder: (context) => RecommendationScreen(mood: "Angry"),
                     ),
                   );
                 }),
@@ -115,11 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 quickActionCard(Icons.auto_awesome_rounded, "AI Mood Chat", [Colors.indigo, Colors.indigoAccent.shade200]),
                 
                 quickActionCard(
-                  onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => JournalScreen));
-                  },
+                  onTap: () => widget.action(3),
                   Icons.book, "Journal", 
-                  [Colors.purple, Colors.purple.shade300]
+                  [Colors.purple, Colors.purple.shade300],
                 ),
                 
                 quickActionCard(Icons.music_note, "Music", [Colors.pink, Colors.pink.shade300]),

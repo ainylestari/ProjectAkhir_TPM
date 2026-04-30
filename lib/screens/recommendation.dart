@@ -42,7 +42,7 @@ class RecommendationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Recommendations for $mood"),
-        backgroundColor: Colors.purple,
+        backgroundColor: const Color.fromARGB(255, 216, 117, 234),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

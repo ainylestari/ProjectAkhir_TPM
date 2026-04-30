@@ -117,18 +117,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 quickActionCard(Icons.auto_awesome_rounded, "AI Mood Chat", [Colors.indigo, Colors.indigoAccent.shade200]),
                 
                 quickActionCard(
+                  onTap: () => widget.action(1),
+                  Icons.location_on_rounded, "Explore Places",
+                  [Colors.purple, Colors.purple.shade300]
+                ),
+
+                quickActionCard(
                   onTap: () => widget.action(3),
                   Icons.book, "Journal", 
-                  [Colors.purple, Colors.purple.shade300],
+                  [Colors.pink, Colors.pink.shade300],
                 ),
                 
-                quickActionCard(Icons.music_note, "Music", [Colors.pink, Colors.pink.shade300]),
-
-                quickActionCard(Icons.location_on_rounded, "Explore Places", [Colors.orange.shade600, Colors.orange.shade300]),
+                quickActionCard(Icons.sports_esports, "Game", [Colors.orange.shade600, Colors.orange.shade300]),
               ],
             ),
 
-            
+            const SizedBox(height: 30),
+
+            /// Quick action
+            const Text(
+              "Other Options",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Column(
+              children: [
+                quickActionCard(Icons.attach_money, "Currency Converter", [const Color.fromARGB(255, 35, 35, 35), const Color.fromARGB(255, 97, 96, 96)]),
+
+                quickActionCard(Icons.access_time_filled, "Time Converter", [const Color.fromARGB(255, 97, 96, 96), const Color.fromARGB(255, 35, 35, 35)]),
+              ],
+            ),
 
           ],
         ),

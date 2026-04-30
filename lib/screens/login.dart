@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -49,6 +50,13 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (user != null) {
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setInt('user_id', user['id']);
+        await prefs.setString('username', user['username']);
+        await prefs.setString('email', user['email']);
+        await prefs.setBool('is_logged_in', true);
+
         showError("Login berhasil");
 
         await Future.delayed(const Duration(seconds: 1));

@@ -47,7 +47,7 @@ Widget searchBar() {
     ),
     child: const TextField(
       decoration: InputDecoration(
-        hintText: "Search activities...",
+        hintText: "Search places...",
         hintStyle: TextStyle(color: Colors.grey),
         prefixIcon: Icon(Icons.search, color: Colors.grey),
         border: InputBorder.none,

@@ -48,6 +48,9 @@ class _JournalScreenState extends State<JournalScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            const SizedBox(height: 30),
+
             const Text(
               "Journals",
               style: TextStyle(

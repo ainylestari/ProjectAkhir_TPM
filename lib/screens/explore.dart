@@ -11,6 +11,8 @@ class ExploreScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 30),
+
             const Text(
               "Explore",
               style: TextStyle(

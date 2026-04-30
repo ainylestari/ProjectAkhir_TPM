@@ -1,25 +1,31 @@
 import 'dart:io';
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
+  static final DatabaseHelper instance =
+      DatabaseHelper._init();
+
   static Database? _database;
 
+  DatabaseHelper._init();
+
+  /// =========================
+  /// HASH PASSWORD
+  /// =========================
   String _hashPassword(String password) {
-    var bytes = utf8.encode(password); 
+    var bytes = utf8.encode(password);
     var digest = sha256.convert(bytes);
     return digest.toString();
   }
 
-  DatabaseHelper._init();
-
-  // =========================
-  // GET DATABASE
-  // =========================
+  /// =========================
+  /// GET DATABASE
+  /// =========================
   Future<Database> get database async {
     if (_database != null) return _database!;
 
@@ -27,14 +33,17 @@ class DatabaseHelper {
     return _database!;
   }
 
-  // =========================
-  // INIT DATABASE
-  // =========================
+  /// =========================
+  /// INIT DATABASE
+  /// =========================
   Future<Database> _initDB(String filePath) async {
     Directory documentsDirectory =
         await getApplicationDocumentsDirectory();
 
-    String path = join(documentsDirectory.path, filePath);
+    String path = join(
+      documentsDirectory.path,
+      filePath,
+    );
 
     return await openDatabase(
       path,
@@ -43,21 +52,25 @@ class DatabaseHelper {
     );
   }
 
-  // =========================
-  // CREATE TABLES
-  // =========================
-  Future _createDB(Database db, int version) async {
-    // TABLE USER
+  /// =========================
+  /// CREATE TABLES
+  /// =========================
+  Future<void> _createDB(
+    Database db,
+    int version,
+  ) async {
+    /// USERS
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        image TEXT
       )
     ''');
 
-    // TABLE JOURNAL
+    /// JOURNALS
     await db.execute('''
       CREATE TABLE journals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,46 +83,59 @@ class DatabaseHelper {
       )
     ''');
 
-    // TABLE PLANNER
+    /// PLANNERS
     await db.execute('''
       CREATE TABLE planners (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        destination TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        time TEXT NOT NULL,
+        period TEXT NOT NULL,
         date TEXT NOT NULL,
-        notes TEXT,
-        budget TEXT,
-        user_id INTEGER,
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        user_id INTEGER
       )
     ''');
   }
 
-  // =====================================================
-  // USER SECTION
-  // =====================================================
+  /// =====================================================
+  /// USER SECTION
+  /// =====================================================
 
-  // REGISTER USER
-  Future<int> registerUser(Map<String, dynamic> user) async {
-    final db = await instance.database;
-    
-    var userWithHash = Map<String, dynamic>.from(user);
-    userWithHash['password'] = _hashPassword(user['password']);
-    
-    return await db.insert('users', userWithHash);
+  /// REGISTER USER
+  Future<int> registerUser(
+    Map<String, dynamic> user,
+  ) async {
+    final db = await database;
+
+    var userWithHash =
+        Map<String, dynamic>.from(user);
+
+    userWithHash['password'] =
+        _hashPassword(user['password']);
+
+    return await db.insert(
+      'users',
+      userWithHash,
+    );
   }
 
-  // LOGIN USER
+  /// LOGIN USER
   Future<Map<String, dynamic>?> loginUser(
-      String email,
-      String password) async {
-    final db = await instance.database;
+    String email,
+    String password,
+  ) async {
+    final db = await database;
 
-    String hashedInput = _hashPassword(password);
+    String hashedInput =
+        _hashPassword(password);
 
     final result = await db.query(
       'users',
       where: 'email = ? AND password = ?',
-      whereArgs: [email, hashedInput],
+      whereArgs: [
+        email,
+        hashedInput,
+      ],
     );
 
     if (result.isNotEmpty) {
@@ -119,34 +145,48 @@ class DatabaseHelper {
     return null;
   }
 
-  // GET ALL USERS
-  Future<List<Map<String, dynamic>>> getUsers() async {
-    final db = await instance.database;
-    return await db.query('users');
+  /// GET ALL USERS
+  Future<List<Map<String, dynamic>>>
+      getUsers() async {
+    final db = await database;
+
+    return await db.query(
+      'users',
+      orderBy: 'id DESC',
+    );
   }
 
-  // =====================================================
-  // JOURNAL SECTION
-  // =====================================================
+  /// =====================================================
+  /// JOURNAL SECTION
+  /// =====================================================
 
-  // ADD JOURNAL
-  Future<int> insertJournal(Map<String, dynamic> journal) async {
-    final db = await instance.database;
-    return await db.insert('journals', journal);
+  /// ADD JOURNAL
+  Future<int> insertJournal(
+    Map<String, dynamic> journal,
+  ) async {
+    final db = await database;
+
+    return await db.insert(
+      'journals',
+      journal,
+    );
   }
 
-  // GET ALL JOURNALS
-  Future<List<Map<String, dynamic>>> getJournals() async {
-    final db = await instance.database;
+  /// GET ALL JOURNALS
+  Future<List<Map<String, dynamic>>>
+      getJournals() async {
+    final db = await database;
+
     return await db.query(
       'journals',
       orderBy: 'id DESC',
     );
   }
 
-  // GET JOURNAL BY ID
-  Future<Map<String, dynamic>?> getJournalById(int id) async {
-    final db = await instance.database;
+  /// GET JOURNAL BY ID
+  Future<Map<String, dynamic>?>
+      getJournalById(int id) async {
+    final db = await database;
 
     final result = await db.query(
       'journals',
@@ -161,11 +201,12 @@ class DatabaseHelper {
     return null;
   }
 
-  // UPDATE JOURNAL
+  /// UPDATE JOURNAL
   Future<int> updateJournal(
-      int id,
-      Map<String, dynamic> journal) async {
-    final db = await instance.database;
+    int id,
+    Map<String, dynamic> journal,
+  ) async {
+    final db = await database;
 
     return await db.update(
       'journals',
@@ -175,9 +216,9 @@ class DatabaseHelper {
     );
   }
 
-  // DELETE JOURNAL
+  /// DELETE JOURNAL
   Future<int> deleteJournal(int id) async {
-    final db = await instance.database;
+    final db = await database;
 
     return await db.delete(
       'journals',
@@ -186,19 +227,26 @@ class DatabaseHelper {
     );
   }
 
-  // =====================================================
-  // PLANNER SECTION
-  // =====================================================
+  /// =====================================================
+  /// PLANNER SECTION
+  /// =====================================================
 
-  // ADD PLANNER
-  Future<int> insertPlanner(Map<String, dynamic> planner) async {
-    final db = await instance.database;
-    return await db.insert('planners', planner);
+  /// ADD PLANNER
+  Future<int> insertPlanner(
+    Map<String, dynamic> planner,
+  ) async {
+    final db = await database;
+
+    return await db.insert(
+      'planners',
+      planner,
+    );
   }
 
-  // GET ALL PLANNERS
-  Future<List<Map<String, dynamic>>> getPlanners() async {
-    final db = await instance.database;
+  /// GET ALL PLANNERS
+  Future<List<Map<String, dynamic>>>
+      getPlanners() async {
+    final db = await database;
 
     return await db.query(
       'planners',
@@ -206,9 +254,10 @@ class DatabaseHelper {
     );
   }
 
-  // GET PLANNER BY ID
-  Future<Map<String, dynamic>?> getPlannerById(int id) async {
-    final db = await instance.database;
+  /// GET PLANNER BY ID
+  Future<Map<String, dynamic>?>
+      getPlannerById(int id) async {
+    final db = await database;
 
     final result = await db.query(
       'planners',
@@ -223,11 +272,12 @@ class DatabaseHelper {
     return null;
   }
 
-  // UPDATE PLANNER
+  /// UPDATE PLANNER
   Future<int> updatePlanner(
-      int id,
-      Map<String, dynamic> planner) async {
-    final db = await instance.database;
+    int id,
+    Map<String, dynamic> planner,
+  ) async {
+    final db = await database;
 
     return await db.update(
       'planners',
@@ -237,9 +287,9 @@ class DatabaseHelper {
     );
   }
 
-  // DELETE PLANNER
+  /// DELETE PLANNER
   Future<int> deletePlanner(int id) async {
-    final db = await instance.database;
+    final db = await database;
 
     return await db.delete(
       'planners',
@@ -248,12 +298,50 @@ class DatabaseHelper {
     );
   }
 
-  // =====================================================
-  // CLOSE DATABASE
-  // =====================================================
+  /// =====================================================
+  /// DEBUG PRINT DATABASE
+  /// =====================================================
 
-  Future close() async {
-    final db = await instance.database;
+  Future<void> printAllDatabase() async {
+    final db = await database;
+
+    /// USERS
+    final users = await db.query(
+      'users',
+      orderBy: 'id DESC',
+    );
+
+    print("===== USERS =====");
+    print(users);
+    print("=================\n");
+
+    /// JOURNALS
+    final journals = await db.query(
+      'journals',
+      orderBy: 'id DESC',
+    );
+
+    print("===== JOURNALS =====");
+    print(journals);
+    print("====================\n");
+
+    /// PLANNERS
+    final planners = await db.query(
+      'planners',
+      orderBy: 'id DESC',
+    );
+
+    print("===== PLANNERS =====");
+    print(planners);
+    print("====================\n");
+  }
+
+  /// =====================================================
+  /// CLOSE DATABASE
+  /// =====================================================
+
+  Future<void> close() async {
+    final db = await database;
     db.close();
   }
 }

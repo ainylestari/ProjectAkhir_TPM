@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
 import '/screens/navigation.dart';
+import '../database.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int) action;
@@ -13,6 +14,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
 
   @override
+  void initState() {
+    super.initState();
+
+    DatabaseHelper.instance.printAllDatabase();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
 
@@ -21,6 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
+            const SizedBox(height: 30),
+
             const Text(
               "Hi there 👋",
               style: TextStyle(

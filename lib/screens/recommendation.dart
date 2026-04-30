@@ -7,104 +7,205 @@ class RecommendationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-  List<Widget> recommendations = [];
+    List<Widget> recommendations = [];
 
     switch (mood) {
       case "Happy":
         recommendations = [
-          recommendationCard("Stroll Outside", "Take a walk or jog at the nearest park."),
-          recommendationCard("Try New Recipe", "Experiment with a new dish you've been wanting to try."),
-          recommendationCard("Pour Creative Ideas", "Doodling, painting, or crafting to express yourself."),
+          recommendationCard(
+            icon: Icons.music_note,
+            color: const Color(0xFFFFF3B0),
+            title: "Listen to upbeat music",
+            subtitle: "Boost your mood with energetic songs",
+          ),
+          recommendationCard(
+            icon: Icons.directions_walk,
+            color: const Color(0xFFD7F9F1),
+            title: "Take a walk outside",
+            subtitle: "Fresh air can improve your mood",
+          ),
+          recommendationCard(
+            icon: Icons.people,
+            color: const Color(0xFFFFE5D9),
+            title: "Meet a friend",
+            subtitle: "Spend time with someone you like",
+          ),
         ];
         break;
+
       case "Sad":
         recommendations = [
-          recommendationCard("Comfort Food or Drink", "Treat yourself with your favorite comfort food or drink."),
-          recommendationCard("Connect with Loved Ones", "Reach out to friends or family for support."),
-          recommendationCard("Journaling", "Writing down your thoughts can be therapeutic."),];
-        break;
-      case "Angry":
-        recommendations = [
-          recommendationCard("Intense Exercise", "Channel your high energy at the nearest gym."),
-          recommendationCard("Grounding", "5-4-3-2-1 technique to calm your mind."),
-          recommendationCard("Cold Shower", "A cold shower can help reduce anger and clear your mind."),
+          recommendationCard(
+            icon: Icons.fastfood,
+            color: const Color(0xFFFFF3B0),
+            title: "Comfort food or drink",
+            subtitle: "Treat yourself gently",
+          ),
+          recommendationCard(
+            icon: Icons.favorite,
+            color: const Color(0xFFFFE5D9),
+            title: "Connect with loved ones",
+            subtitle: "Talk to someone you trust",
+          ),
+          recommendationCard(
+            icon: Icons.edit,
+            color: const Color(0xFFD7F9F1),
+            title: "Journaling",
+            subtitle: "Write what you feel",
+          ),
         ];
         break;
-      default: // Neutral
+
+      case "Angry":
         recommendations = [
-          recommendationCard("Read a Book", "Reading can give you inspiration and new perspectives."),
-          recommendationCard("Listen to Music", "Listening to music can improve your mood."),
-          recommendationCard("Study Time", "Focus on your studies to boost productivity."),
+          recommendationCard(
+            icon: Icons.fitness_center,
+            color: const Color(0xFFFFE5D9),
+            title: "Intense exercise",
+            subtitle: "Release your energy physically",
+          ),
+          recommendationCard(
+            icon: Icons.spa,
+            color: const Color(0xFFD7F9F1),
+            title: "Grounding technique",
+            subtitle: "Calm your mind step by step",
+          ),
+          recommendationCard(
+            icon: Icons.shower,
+            color: const Color(0xFFFFF3B0),
+            title: "Cold shower",
+            subtitle: "Reset your mind and body",
+          ),
+        ];
+        break;
+
+      default:
+        recommendations = [
+          recommendationCard(
+            icon: Icons.menu_book,
+            color: const Color(0xFFFFF3B0),
+            title: "Read a book",
+            subtitle: "Gain new perspective",
+          ),
+          recommendationCard(
+            icon: Icons.music_note,
+            color: const Color(0xFFD7F9F1),
+            title: "Listen to music",
+            subtitle: "Relax and enjoy",
+          ),
+          recommendationCard(
+            icon: Icons.school,
+            color: const Color(0xFFFFE5D9),
+            title: "Study time",
+            subtitle: "Boost your productivity",
+          ),
         ];
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F3FF),
       appBar: AppBar(
-        title: Text("Recommendations for $mood"),
-        backgroundColor: const Color.fromARGB(255, 216, 117, 234),
+        title: Text("Recommendations"),
+        backgroundColor: const Color(0xFFF8F3FF),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              "Here are some recommendations based on your mood!",
-              style: TextStyle(fontSize: 18)
+            const SizedBox(height: 10),
+
+            // HEADER
+            Column(
+              children: [
+                Text(
+                  moodEmoji(mood),
+                  style: const TextStyle(fontSize: 50),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "You're feeling $mood!",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Here’s what we recommend",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 20),
-            ...recommendations,
+            const SizedBox(height: 25),
 
-          ]
-          
-          
+            ...recommendations,
+          ],
         ),
       ),
     );
   }
+
+  String moodEmoji(String mood) {
+    switch (mood) {
+      case "Happy":
+        return "😄";
+      case "Sad":
+        return "😢";
+      case "Angry":
+        return "😠";
+      default:
+        return "😐";
+    }
+  }
 }
 
-
-Widget recommendationCard(String title, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.lightbulb, color: Colors.purple),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-
-                const SizedBox(height: 5),
-
-                Text(
-                  subtitle,
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ),
+Widget recommendationCard({
+  required IconData icon,
+  required Color color,
+  required String title,
+  required String subtitle,
+}) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(18),
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
           ),
-        ],
-      ),
-    );
-  }
+          child: Icon(icon, color: Colors.black87),
+        ),
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(color: Colors.black54, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+
+      ],
+    ),
+  );
+}

@@ -66,7 +66,9 @@ class DatabaseHelper {
         username TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
-        image TEXT
+        image TEXT,
+        phone INTEGER,
+        location TEXT
       )
     ''');
 
@@ -153,6 +155,48 @@ class DatabaseHelper {
     return await db.query(
       'users',
       orderBy: 'id DESC',
+    );
+  }
+
+  Future<Map<String, dynamic>?> getUserById(int id) async {
+    final db = await instance.database;
+
+    final result = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first;
+    }
+
+    return null;
+  }
+
+  /// UPDATE USER
+  Future<int> updateUser(int id,Map<String, dynamic> user,) async {
+    final db = await database;
+
+    final updatedUser =
+        Map<String, dynamic>.from(user);
+
+    // kalau password dikirim dan tidak kosong → hash ulang
+    if (updatedUser.containsKey('password') &&
+        updatedUser['password'] != null &&
+        updatedUser['password'].toString().isNotEmpty) {
+      updatedUser['password'] =
+          _hashPassword(updatedUser['password']);
+    } else {
+      // kalau tidak update password → hapus dari update
+      updatedUser.remove('password');
+    }
+
+    return await db.update(
+      'users',
+      updatedUser,
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
 

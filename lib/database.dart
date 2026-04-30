@@ -2,10 +2,18 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+
+  String _hashPassword(String password) {
+    var bytes = utf8.encode(password); 
+    var digest = sha256.convert(bytes);
+    return digest.toString();
+  }
 
   DatabaseHelper._init();
 
@@ -83,7 +91,11 @@ class DatabaseHelper {
   // REGISTER USER
   Future<int> registerUser(Map<String, dynamic> user) async {
     final db = await instance.database;
-    return await db.insert('users', user);
+    
+    var userWithHash = Map<String, dynamic>.from(user);
+    userWithHash['password'] = _hashPassword(user['password']);
+    
+    return await db.insert('users', userWithHash);
   }
 
   // LOGIN USER
@@ -92,10 +104,12 @@ class DatabaseHelper {
       String password) async {
     final db = await instance.database;
 
+    String hashedInput = _hashPassword(password);
+
     final result = await db.query(
       'users',
       where: 'email = ? AND password = ?',
-      whereArgs: [email, password],
+      whereArgs: [email, hashedInput],
     );
 
     if (result.isNotEmpty) {

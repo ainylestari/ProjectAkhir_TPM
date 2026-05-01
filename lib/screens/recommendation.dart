@@ -20,13 +20,13 @@ class RecommendationScreen extends StatelessWidget {
           ),
           recommendationCard(
             icon: Icons.directions_walk,
-            color: const Color(0xFFD7F9F1),
+            color: const Color.fromARGB(255, 250, 237, 208),
             title: "Take a walk outside",
             subtitle: "Fresh air can improve your mood",
           ),
           recommendationCard(
             icon: Icons.people,
-            color: const Color(0xFFFFE5D9),
+            color: const Color.fromARGB(255, 255, 217, 217),
             title: "Meet a friend",
             subtitle: "Spend time with someone you like",
           ),
@@ -37,19 +37,19 @@ class RecommendationScreen extends StatelessWidget {
         recommendations = [
           recommendationCard(
             icon: Icons.fastfood,
-            color: const Color(0xFFFFF3B0),
+            color: const Color.fromARGB(255, 199, 250, 253),
             title: "Comfort food or drink",
             subtitle: "Treat yourself gently",
           ),
           recommendationCard(
             icon: Icons.favorite,
-            color: const Color(0xFFFFE5D9),
+            color: const Color.fromARGB(255, 197, 217, 252),
             title: "Connect with loved ones",
             subtitle: "Talk to someone you trust",
           ),
           recommendationCard(
             icon: Icons.edit,
-            color: const Color(0xFFD7F9F1),
+            color: const Color.fromARGB(255, 230, 193, 247),
             title: "Journaling",
             subtitle: "Write what you feel",
           ),
@@ -60,13 +60,13 @@ class RecommendationScreen extends StatelessWidget {
         recommendations = [
           recommendationCard(
             icon: Icons.fitness_center,
-            color: const Color(0xFFFFE5D9),
+            color: const Color.fromARGB(255, 193, 250, 208),
             title: "Intense exercise",
             subtitle: "Release your energy physically",
           ),
           recommendationCard(
             icon: Icons.spa,
-            color: const Color(0xFFD7F9F1),
+            color: const Color.fromARGB(255, 181, 252, 230),
             title: "Grounding technique",
             subtitle: "Calm your mind step by step",
           ),
@@ -83,19 +83,19 @@ class RecommendationScreen extends StatelessWidget {
         recommendations = [
           recommendationCard(
             icon: Icons.menu_book,
-            color: const Color(0xFFFFF3B0),
+            color: const Color.fromARGB(255, 252, 206, 194),
             title: "Read a book",
             subtitle: "Gain new perspective",
           ),
           recommendationCard(
             icon: Icons.music_note,
-            color: const Color(0xFFD7F9F1),
+            color: const Color.fromARGB(255, 248, 244, 207),
             title: "Listen to music",
             subtitle: "Relax and enjoy",
           ),
           recommendationCard(
             icon: Icons.school,
-            color: const Color(0xFFFFE5D9),
+            color: const Color.fromARGB(255, 207, 247, 203),
             title: "Study time",
             subtitle: "Boost your productivity",
           ),
@@ -103,10 +103,10 @@ class RecommendationScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F3FF),
+      backgroundColor: const Color.fromARGB(255, 255, 244, 255),
       appBar: AppBar(
         title: Text("Recommendations"),
-        backgroundColor: const Color(0xFFF8F3FF),
+        backgroundColor: const Color.fromARGB(255, 255, 244, 255),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

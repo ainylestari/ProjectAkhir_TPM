@@ -176,25 +176,11 @@ class DatabaseHelper {
 
   /// UPDATE USER
   Future<int> updateUser(int id,Map<String, dynamic> user,) async {
-    final db = await database;
-
-    final updatedUser =
-        Map<String, dynamic>.from(user);
-
-    // kalau password dikirim dan tidak kosong → hash ulang
-    if (updatedUser.containsKey('password') &&
-        updatedUser['password'] != null &&
-        updatedUser['password'].toString().isNotEmpty) {
-      updatedUser['password'] =
-          _hashPassword(updatedUser['password']);
-    } else {
-      // kalau tidak update password → hapus dari update
-      updatedUser.remove('password');
-    }
+    final db = await instance.database;
 
     return await db.update(
       'users',
-      updatedUser,
+      user,
       where: 'id = ?',
       whereArgs: [id],
     );

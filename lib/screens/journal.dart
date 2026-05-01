@@ -85,7 +85,7 @@ class _JournalScreenState extends State<JournalScreen> {
               },
               elementColor: Colors.white,
               bgColor: Colors.purple,
-              bg2Color: Colors.purple.shade300,
+              bg2Color: Colors.pinkAccent,
             ),
 
             const SizedBox(height: 20),

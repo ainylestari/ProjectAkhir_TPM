@@ -142,28 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 quickActionCard(Icons.sports_esports, "Game", [Colors.orange.shade600, Colors.orange.shade300]),
               ],
             ),
-
-            const SizedBox(height: 30),
-
-            /// Quick action
-            const Text(
-              "Other Options",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Column(
-              children: [
-                quickActionCard(Icons.attach_money, "Currency Converter", [const Color.fromARGB(255, 35, 35, 35), const Color.fromARGB(255, 97, 96, 96)]),
-
-                quickActionCard(Icons.access_time_filled, "Time Converter", [const Color.fromARGB(255, 97, 96, 96), const Color.fromARGB(255, 35, 35, 35)]),
-              ],
-            ),
-
           ],
         ),
       ),
@@ -184,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.purple.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Text(emoji, style: const TextStyle(fontSize: 24)),
+              child: Text(emoji, style: const TextStyle(fontSize: 35)),
             ),
             const SizedBox(height: 5),
             Text(label),

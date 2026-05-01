@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
 import 'profile_edit.dart';
+import 'dart:io';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -154,28 +155,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Container(
                             width: 90,
                             height: 90,
-                            decoration:
-                                const BoxDecoration(
-                              shape: BoxShape
-                                  .circle,
-                              gradient:
-                                  LinearGradient(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
                                 colors: [
-                                  Color(
-                                      0xFFA855F7),
-                                  Color(
-                                      0xFFFF6FB5),
+                                  Color(0xFFA855F7),
+                                  Color(0xFFFF6FB5),
                                 ],
                               ),
+                              image: userData?['image'] != null &&
+                                      userData!['image']
+                                          .toString()
+                                          .isNotEmpty
+                                  ? DecorationImage(
+                                      image: FileImage(
+                                        File(userData!['image']),
+                                      ),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
-                            child:
-                                const Icon(
-                              Icons
-                                  .person_outline,
-                              color: Colors
-                                  .white,
-                              size: 42,
-                            ),
+                            child: userData?['image'] == null ||
+                                    userData!['image']
+                                        .toString()
+                                        .isEmpty
+                                ? const Icon(
+                                    Icons.person_outline,
+                                    color: Colors.white,
+                                    size: 42,
+                                  )
+                                : null,
                           ),
 
                           const SizedBox(

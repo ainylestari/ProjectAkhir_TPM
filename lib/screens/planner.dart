@@ -128,29 +128,6 @@ class _PlannerScreenState
                   ],
                 ),
               ),
-
-              IconButton(
-                onPressed: () async {
-                  final result =
-                      await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) =>
-                              PlannerDetailScreen(
-                        plannerdetail:
-                            _selectedDate,
-                      ),
-                    ),
-                  );
-
-                  if (result == true) {
-                    loadPlanners();
-                  }
-                },
-                icon:
-                    const Icon(Icons.add),
-              ),
             ],
           ),
 
@@ -452,9 +429,9 @@ class _PlannerScreenState
               },
               elementColor:
                   Colors.white,
-              bgColor: Colors.red,
+              bgColor: Colors.purple,
               bg2Color:
-                  Colors.red.shade300,
+                  Colors.pinkAccent,
             ),
 
             const SizedBox(height: 20),

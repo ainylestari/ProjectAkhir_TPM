@@ -97,6 +97,29 @@ class DatabaseHelper {
         user_id INTEGER
       )
     ''');
+
+    /// explore
+    await db.execute('''
+      CREATE TABLE explore (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        lat REAL NOT NULL,
+        lng REAL NOT NULL,
+        imagePath TEXT NOT NULL,
+        description TEXT
+      )
+    ''');
+
+    /// chat history
+    await db.execute('''
+    CREATE TABLE chat_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL, 
+      role TEXT NOT NULL,
+      message TEXT NOT NULL,
+      timestamp TEXT NOT NULL
+    )
+  ''');
   }
 
   /// =====================================================
@@ -343,9 +366,28 @@ class DatabaseHelper {
   }
 
   /// =====================================================
-  /// DEBUG PRINT DATABASE
+  /// EXPLORE SECTION
   /// =====================================================
 
+  /// GET ALL EXPLORE DATA (Untuk LBS Radius 10km)
+  Future<List<Map<String, dynamic>>> getExplore() async {
+    final db = await database;
+
+    return await db.query(
+      'explore', // Nama tabel yang kamu buat di _createDB
+      orderBy: 'id DESC',
+    );
+  }
+
+  /// INSERT EXPLORE DATA (Jika kamu butuh tambah data dari aplikasi)
+  Future<int> insertExplore(Map<String, dynamic> explore) async {
+    final db = await database;
+    return await db.insert('explore', explore);
+  }
+
+  /// 
+
+  // buat debug
   Future<void> printAllDatabase() async {
     final db = await database;
 
@@ -377,6 +419,16 @@ class DatabaseHelper {
 
     print("===== PLANNERS =====");
     print(planners);
+    print("====================\n");
+
+    /// EXPLORE
+    final explore = await db.query(
+      'explore',
+      orderBy: 'id DESC',
+    );
+
+    print("===== EXPLORE =====");
+    print(explore);
     print("====================\n");
   }
 

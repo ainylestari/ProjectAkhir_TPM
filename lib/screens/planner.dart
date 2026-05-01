@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '/screens/plannerDetail.dart';
+import 'planner_detail.dart';
 import 'package:intl/intl.dart';
 import '../database.dart';
 

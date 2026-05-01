@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'planner_detail.dart';
 import 'package:intl/intl.dart';
-import 'plannerDetail.dart';
 import '../database.dart';
 
 class PlannerScreen extends StatefulWidget {

@@ -53,6 +53,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
               /// SEARCH BAR
               TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchQuery = value.toLowerCase();
+                  });
+                }, // realtime search, langsung filter saat user ketik
                 decoration: InputDecoration(
                   hintText: "Search places...",
                   prefixIcon: const Icon(Icons.search),
@@ -136,10 +141,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       return const Center(child: Text("Gagal mengambil data."));
                     }
 
-                    // Filter Berdasarkan Kategori & Search Query
+                    // filter berdasarkan kata kunci kategori & search
                     final filteredPlaces = snapshot.data!.where((p) {
-                      final matchesCategory = selectedCategory == "All" || p.category == selectedCategory;
+                      // cek apakah kategori dari DB mengandung kata kunci dari tombol yang diklik
+                      final matchesCategory = selectedCategory == "All" || 
+                          p.category.toLowerCase().contains(selectedCategory.toLowerCase());
+
+                      // cek apakah nama tempat mengandung kata kunci pencarian
                       final matchesSearch = p.name.toLowerCase().contains(searchQuery);
+
                       return matchesCategory && matchesSearch;
                     }).toList();
 
@@ -155,53 +165,87 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
+
                       itemBuilder: (context, index) {
                         final place = filteredPlaces[index];
-
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            image: DecorationImage(
-                              image: NetworkImage(place.imagePath),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            // navigasi ke detail bisa ditaruh di sini nanti
+                          },
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              gradient: LinearGradient(
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                                colors: [Colors.black.withOpacity(0.8), Colors.transparent],
-                              ),
+                              color: Colors.grey[200],
                             ),
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  place.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.network(
+                                    place.imagePath,
+                                    fit: BoxFit.cover,
+                                    // gambar gagal dimuat, tampilkan placeholder
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Image.network(
+                                        'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop',
+                                        fit: BoxFit.cover,
+                                      );
+                                    },
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      );
+                                    },
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.location_on, color: Colors.redAccent, size: 14),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      "${place.distance?.toStringAsFixed(1)} km",
-                                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                                  
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          Colors.black.withOpacity(0.8),
+                                          Colors.transparent,
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          place.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.location_on, color: Colors.redAccent, size: 14),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              "${place.distance?.toStringAsFixed(1)} km",
+                                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );

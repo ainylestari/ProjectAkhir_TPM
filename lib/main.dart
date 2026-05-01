@@ -3,10 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login.dart';
 import 'screens/register.dart';
 import 'screens/navigation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  await dotenv.load(fileName: ".env"); 
+  
   runApp(const MyApp());
-}
+} // baca .env sebelum run app, biar API key bisa dipakai
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

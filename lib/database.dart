@@ -91,10 +91,15 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
         description TEXT NOT NULL,
-        time TEXT NOT NULL,
-        period TEXT NOT NULL,
         date TEXT NOT NULL,
-        user_id INTEGER
+        time TEXT NOT NULL,
+        timezone TEXT NOT NULL,
+        period TEXT NOT NULL,
+        budget TEXT,
+        currency TEXT,
+        user_id INTEGER,
+        FOREIGN KEY (user_id)
+        REFERENCES users (id)
       )
     ''');
   }
@@ -325,6 +330,32 @@ class DatabaseHelper {
       'planners',
       where: 'id = ?',
       whereArgs: [id],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getPlannerByDate(
+    String date,
+  ) async {
+    final db = await database;
+
+    return await db.query(
+      'planners',
+      where: 'date = ?',
+      whereArgs: [date],
+      orderBy: 'time ASC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getAllPlanner(
+    int userId,
+  ) async {
+    final db = await database;
+
+    return await db.query(
+      'planners',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'date ASC, time ASC',
     );
   }
 

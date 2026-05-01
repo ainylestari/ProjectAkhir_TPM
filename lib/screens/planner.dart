@@ -1,86 +1,441 @@
 import 'package:flutter/material.dart';
-import '/screens/plannerDetail.dart';
 import 'package:intl/intl.dart';
+import 'plannerDetail.dart';
 import '../database.dart';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
 
   @override
-  State<PlannerScreen> createState() =>
-      _PlannerScreenState();
+  State<PlannerScreen> createState() => _PlannerScreenState();
 }
 
-class _PlannerScreenState
-    extends State<PlannerScreen> {
-  final DatabaseHelper dbHelper =
-      DatabaseHelper.instance;
+class _PlannerScreenState extends State<PlannerScreen> {
+  final DatabaseHelper dbHelper = DatabaseHelper.instance;
 
-  DateTime _selectedDate = DateTime.now();
+  DateTime selectedDate = DateTime.now();
 
-  List<Map<String, dynamic>> planners = [];
+  String selectedCurrency = "IDR";
+  String selectedTimezone = "WIB";
+
+  List<Map<String, dynamic>> plannerList = [];
+
+  final List<String> currencyList = [
+    "IDR",
+    "USD",
+    "SGD",
+    "EUR",
+    "JPY",
+    "KRW",
+  ];
+
+  final Map<String, double> currencyRates = {
+    "IDR": 1,
+    "USD": 16000,
+    "SGD": 12000,
+    "EUR": 17000,
+    "JPY": 110,
+    "KRW": 12,
+  };
+
+  final List<String> timezoneList = [
+    "WIB",
+    "WITA",
+    "WIT",
+    "London",
+    "Singapore",
+    "Tokyo",
+    "Seoul",
+  ];
+
+  final Map<String, int> timezoneOffset = {
+    "WIB": 7,
+    "WITA": 8,
+    "WIT": 9,
+    "London": 0,
+    "Singapore": 8,
+    "Tokyo": 9,
+    "Seoul": 9,
+  };
 
   @override
   void initState() {
     super.initState();
-    loadPlanners();
+    loadPlanner();
   }
 
-  Future<void> loadPlanners() async {
-    final data =
-        await dbHelper.getPlanners();
-
-    setState(() {
-      planners = data;
-    });
-  }
-
-  void _changeDate(int days) {
-    setState(() {
-      _selectedDate = _selectedDate.add(
-        Duration(days: days),
-      );
-    });
-  }
-
-  Future<void> deletePlanner(int id) async {
-    await dbHelper.deletePlanner(id);
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      const SnackBar(
-        content: Text(
-          "Planner berhasil dihapus",
-        ),
-      ),
+  Future<void> loadPlanner() async {
+    final data = await dbHelper.getPlannerByDate(
+      DateFormat("dd/MM/yyyy").format(selectedDate),
     );
 
-    loadPlanners();
+    setState(() {
+      plannerList = data;
+    });
   }
 
-  List<Map<String, dynamic>> getByPeriod(
-      String period) {
-    return planners.where((item) {
-      return item['period'] == period &&
-          item['date'] ==
-              DateFormat(
-                'yyyy-MM-dd',
-              ).format(_selectedDate);
+  void changeDate(int day) {
+    setState(() {
+      selectedDate = selectedDate.add(Duration(days: day));
+    });
+
+    loadPlanner();
+  }
+
+  String convertBudget(
+    String amount,
+    String fromCurrency,
+  ) {
+    try {
+      double value =
+          double.tryParse(amount) ?? 0;
+
+      double fromRate =
+          currencyRates[fromCurrency] ?? 1;
+
+      double toRate =
+          currencyRates[selectedCurrency] ?? 1;
+
+      /// convert ke IDR dulu
+      double idrValue =
+          value * fromRate;
+
+      /// lalu ke target currency
+      double finalValue =
+          idrValue / toRate;
+
+      return finalValue
+          .toStringAsFixed(0);
+    } catch (e) {
+      return amount;
+    }
+  }
+
+  String convertTime(
+    String originalTime,
+    String fromTimezone,
+  ) {
+    try {
+      final parts = originalTime.split(":");
+      int hour = int.parse(parts[0]);
+      int minute = int.parse(parts[1]);
+
+      int fromOffset = timezoneOffset[fromTimezone] ?? 7;
+      int toOffset = timezoneOffset[selectedTimezone] ?? 7;
+
+      int diff = toOffset - fromOffset;
+
+      hour += diff;
+
+      if (hour >= 24) hour -= 24;
+      if (hour < 0) hour += 24;
+
+      return "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}";
+    } catch (e) {
+      return originalTime;
+    }
+  }
+
+  String getPeriodFromTime(String time) {
+    try {
+      int hour = int.parse(time.split(":")[0]);
+
+      if (hour >= 5 && hour < 11) {
+        return "Morning";
+      } else if (hour >= 11 && hour < 15) {
+        return "Afternoon";
+      } else if (hour >= 15 && hour < 18) {
+        return "Evening";
+      } else {
+        return "Night";
+      }
+    } catch (e) {
+      return "Morning";
+    }
+  }
+
+  List<Map<String, dynamic>> getPlannerByPeriod(
+    String period,
+  ) {
+    return plannerList.where((item) {
+      final convertedTime = convertTime(
+        item['time'] ?? "09:00",
+        item['timezone'] ?? "WIB",
+      );
+
+      final autoPeriod =
+          getPeriodFromTime(convertedTime);
+
+      return autoPeriod == period;
     }).toList();
   }
 
-  Widget buildPlannerSection({
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F3FA),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            children: [
+              /// TITLE
+              const Text(
+                "My Mood Plan",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              const Text(
+                "Plan your activities day by day",
+                style: TextStyle(
+                  color: Colors.grey,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              /// DATE CARD
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black
+                          .withOpacity(0.05),
+                      blurRadius: 12,
+                    )
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment
+                          .spaceBetween,
+                  children: [
+                    circleButton(
+                      icon:
+                          Icons.chevron_left,
+                      onTap: () =>
+                          changeDate(-1),
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          DateFormat(
+                                      "dd/MM/yyyy")
+                                  .format(
+                                      selectedDate) ==
+                              DateFormat(
+                                      "dd/MM/yyyy")
+                                  .format(
+                                      DateTime
+                                          .now())
+                              ? "Today"
+                              : DateFormat(
+                                      "EEEE")
+                                  .format(
+                                      selectedDate),
+                          style:
+                              const TextStyle(
+                            fontWeight:
+                                FontWeight
+                                    .bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text(
+                          DateFormat(
+                                  "MMMM d, yyyy")
+                              .format(
+                                  selectedDate),
+                          style:
+                              const TextStyle(
+                            color:
+                                Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    circleButton(
+                      icon:
+                          Icons.chevron_right,
+                      onTap: () =>
+                          changeDate(1),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              /// DROPDOWN CONVERT
+              Row(
+                children: [
+                  Expanded(
+                    child: topDropdownCard(
+                      icon:
+                          Icons.public,
+                      value:
+                          selectedTimezone,
+                      items:
+                          timezoneList,
+                      onChanged:
+                          (value) {
+                        setState(() {
+                          selectedTimezone =
+                              value!;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: topDropdownCard(
+                      icon:
+                          Icons.attach_money,
+                      value:
+                          selectedCurrency,
+                      items:
+                          currencyList,
+                      onChanged:
+                          (value) {
+                        setState(() {
+                          selectedCurrency =
+                              value!;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              buildSection(
+                title: "Morning",
+                subtitle:
+                    "05:00 AM - 10:59 AM",
+                period: "Morning",
+                bgColor:
+                    const Color(0xFFF8EDB8),
+                icon:
+                    Icons.wb_sunny_outlined,
+              ),
+
+              buildSection(
+                title: "Afternoon",
+                subtitle:
+                    "11:00 AM - 02:59 PM",
+                period: "Afternoon",
+                bgColor:
+                    const Color(0xFFDDF4FF),
+                icon:
+                    Icons.light_mode_outlined,
+              ),
+
+              buildSection(
+                title: "Evening",
+                subtitle:
+                    "03:00 PM - 05:59 PM",
+                period: "Evening",
+                bgColor:
+                    const Color(0xFFFFE5CC),
+                icon:
+                    Icons.wb_twilight_outlined,
+              ),
+
+              buildSection(
+                title: "Night",
+                subtitle:
+                    "06:00 PM - 04:59 AM",
+                period: "Night",
+                bgColor:
+                    const Color(0xFFE8E5FF),
+                icon:
+                    Icons.nightlight_outlined,
+              ),
+
+              const SizedBox(height: 20),
+
+              /// ADD PLAN BUTTON
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result =
+                        await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            PlannerDetailScreen(
+                          plannerdetail:
+                              selectedDate,
+                        ),
+                      ),
+                    );
+
+                    if (result == true) {
+                      loadPlanner();
+                    }
+                  },
+                  style:
+                      ElevatedButton.styleFrom(
+                    padding:
+                        const EdgeInsets
+                            .symmetric(
+                      vertical: 18,
+                    ),
+                    backgroundColor:
+                        Colors.purple,
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius
+                              .circular(
+                                  20),
+                    ),
+                  ),
+                  child: const Text(
+                    "+ Add to Mood Plan",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight:
+                          FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSection({
     required String title,
     required String subtitle,
-    required IconData icon,
+    required String period,
     required Color bgColor,
-    required List<Map<String, dynamic>>
-        items,
+    required IconData icon,
   }) {
+    final items =
+        getPlannerByPeriod(period);
+
     return Container(
       margin:
-          const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
+          const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius:
@@ -91,38 +446,42 @@ class _PlannerScreenState
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                width: 52,
+                height: 52,
+                decoration:
+                    BoxDecoration(
                   color: Colors.white,
                   borderRadius:
-                      BorderRadius.circular(
-                          18),
+                      BorderRadius
+                          .circular(16),
                 ),
                 child: Icon(icon),
               ),
 
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      CrossAxisAlignment
+                          .start,
                   children: [
                     Text(
                       title,
                       style:
                           const TextStyle(
-                        fontSize: 22,
                         fontWeight:
-                            FontWeight.bold,
+                            FontWeight
+                                .bold,
+                        fontSize: 24,
                       ),
                     ),
                     Text(
                       subtitle,
                       style:
                           const TextStyle(
-                        color: Colors.grey,
+                        color:
+                            Colors.grey,
                       ),
                     ),
                   ],
@@ -131,435 +490,215 @@ class _PlannerScreenState
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          if (items.isEmpty)
-            const Text(
-              "Belum ada activity",
-            ),
+          ...items.map((item) {
+            final convertedTime = convertTime(
+              item['time'] ?? "09:00",
+              item['timezone'] ?? "WIB",
+            );
 
-          ...items.map(
-            (planner) => Container(
-              margin:
-                  const EdgeInsets.only(
-                      bottom: 14),
-              padding:
-                  const EdgeInsets.all(18),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white70,
-                borderRadius:
-                    BorderRadius.circular(
-                        22),
+                color: Colors.white.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(22),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  /// TIME BOX
                   Container(
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
                     ),
-                    decoration:
-                        BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius:
-                          BorderRadius.circular(
-                              16),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
-                      planner['time'] ??
-                          '',
-                      style:
-                          const TextStyle(
-                        fontWeight:
-                            FontWeight.bold,
-                        color:
-                            Colors.purple,
+                      convertedTime,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
                     ),
                   ),
 
-                  const SizedBox(width: 18),
+                  const SizedBox(width: 14),
 
+                  /// CONTENT
                   Expanded(
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
-                          planner['title'] ??
-                              '',
-                          style:
-                              const TextStyle(
-                            fontSize: 16,
-                            fontWeight:
-                                FontWeight
-                                    .bold,
+                          item['title'] ?? "-",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
                           ),
                         ),
-                        const SizedBox(
-                            height: 6),
+
+                        const SizedBox(height: 4),
+
                         Text(
-                          planner['description'] ??
-                              '',
-                          style:
-                              const TextStyle(
-                            color:
-                                Colors.grey,
+                          item['description'] ?? "",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        /// BUDGET
+                        Text(
+                            item['budget'] == null ||
+                                    item['budget']
+                                        .toString()
+                                        .isEmpty
+                                ? "-"
+                                : "$selectedCurrency ${convertBudget(
+                                    item['budget'].toString(),
+                                    item['currency'] ?? "IDR",
+                                  )}",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color.fromARGB(221, 57, 46, 215),
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  PopupMenuButton(
-                    onSelected:
-                        (value) async {
-                      if (value ==
-                          'delete') {
-                        deletePlanner(
-                          planner['id'],
-                        );
-                      } else {
+                  /// MENU TITIK 3
+                  PopupMenuButton<String>(
+                    icon: const Icon(
+                      Icons.more_vert,
+                      color: Colors.black54,
+                    ),
+                    onSelected: (value) async {
+                      if (value == "edit") {
                         final result =
-                            await Navigator
-                                .push(
+                            await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (_) =>
-                                    PlannerDetailScreen(
+                            builder: (_) =>
+                                PlannerDetailScreen(
                               plannerdetail:
-                                  _selectedDate,
-                              planner:
-                                  planner,
+                                  selectedDate,
+                              planner: item,
                             ),
                           ),
                         );
 
-                        if (result ==
-                            true) {
-                          loadPlanners();
+                        if (result == true) {
+                          loadPlanner();
                         }
                       }
+
+                      if (value == "delete") {
+                        await dbHelper.deletePlanner(
+                          item['id'],
+                        );
+
+                        loadPlanner();
+                      }
                     },
-                    itemBuilder:
-                        (context) => [
+                    itemBuilder: (context) => [
                       const PopupMenuItem(
-                        value: 'edit',
-                        child:
-                            Text("Edit"),
+                        value: "edit",
+                        child: Text("Edit"),
                       ),
                       const PopupMenuItem(
-                        value: 'delete',
-                        child:
-                            Text("Delete"),
+                        value: "delete",
+                        child: Text("Delete"),
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          }).toList(),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        padding:
-            const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 30),
-
-            /// HEADER LAMA TETAP ADA
-            const Text(
-              "Mood Plan",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight:
-                    FontWeight.bold,
-              ),
+  Widget topDropdownCard({
+    required IconData icon,
+    required String value,
+    required List<String> items,
+    required Function(String?)
+        onChanged,
+  }) {
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(
+        horizontal: 14,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius:
+            BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black
+                .withOpacity(0.04),
+            blurRadius: 8,
+          )
+        ],
+      ),
+      child: DropdownButton<String>(
+        value: value,
+        isExpanded: true,
+        underline: const SizedBox(),
+        icon:
+            const Icon(Icons.keyboard_arrow_down),
+        items: items.map((e) {
+          return DropdownMenuItem(
+            value: e,
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
+                  color: Colors.purple,
+                ),
+                const SizedBox(width: 8),
+                Text(e),
+              ],
             ),
+          );
+        }).toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
 
-            const SizedBox(height: 5),
-
-            const Text(
-              "Plan your activities day by day",
-              style: TextStyle(
-                color: Colors.grey,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            /// DATE SWITCHER LAMA TETAP ADA
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 15,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    BorderRadius.circular(
-                        30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey
-                        .withOpacity(0.1),
-                    blurRadius: 10,
-                    offset:
-                        const Offset(0, 5),
-                  )
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed:
-                        () =>
-                            _changeDate(-1),
-                    icon: const Icon(
-                      Icons.chevron_left,
-                      color: Colors.red,
-                    ),
-                    style:
-                        IconButton.styleFrom(
-                      backgroundColor:
-                          Colors.red
-                              .withOpacity(
-                                  0.1),
-                    ),
-                  ),
-
-                  Column(
-                    children: [
-                      Text(
-                        DateFormat(
-                                    'yyyyMMdd')
-                                .format(
-                                    _selectedDate) ==
-                            DateFormat(
-                                    'yyyyMMdd')
-                                .format(
-                                    DateTime
-                                        .now())
-                        ? "Today"
-                        : DateFormat(
-                                'EEEE')
-                            .format(
-                                _selectedDate),
-                        style:
-                            const TextStyle(
-                          fontSize: 18,
-                          fontWeight:
-                              FontWeight
-                                  .bold,
-                        ),
-                      ),
-                      Text(
-                        DateFormat(
-                                'MMMM d, yyyy')
-                            .format(
-                                _selectedDate),
-                        style:
-                            const TextStyle(
-                          color:
-                              Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  IconButton(
-                    onPressed:
-                        () =>
-                            _changeDate(1),
-                    icon: const Icon(
-                      Icons.chevron_right,
-                      color: Colors.red,
-                    ),
-                    style:
-                        IconButton.styleFrom(
-                      backgroundColor:
-                          Colors.red
-                              .withOpacity(
-                                  0.1),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            /// BUTTON LAMA TETAP ADA
-            regCard(
-              "Schedule Activity",
-              onTap: () async {
-                final result =
-                    await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (_) =>
-                            PlannerDetailScreen(
-                      plannerdetail:
-                          _selectedDate,
-                    ),
-                  ),
-                );
-
-                if (result == true) {
-                  loadPlanners();
-                }
-              },
-              elementColor:
-                  Colors.white,
-              bgColor: Colors.purple,
-              bg2Color:
-                  Colors.pinkAccent,
-            ),
-
-            const SizedBox(height: 20),
-
-            /// UI BARU
-            buildPlannerSection(
-              title: "Morning",
-              subtitle:
-                  "6:00 AM - 12:00 PM",
-              icon:
-                  Icons.wb_sunny_outlined,
-              bgColor:
-                  const Color(0xFFF8EFCB),
-              items:
-                  getByPeriod("Morning"),
-            ),
-
-            buildPlannerSection(
-              title: "Afternoon",
-              subtitle:
-                  "12:00 PM - 6:00 PM",
-              icon: Icons.sunny,
-              bgColor:
-                  const Color(0xFFDCEFFC),
-              items: getByPeriod(
-                  "Afternoon"),
-            ),
-
-            buildPlannerSection(
-              title: "Evening",
-              subtitle:
-                  "6:00 PM - 9:00 PM",
-              icon:
-                  Icons.dark_mode_outlined,
-              bgColor:
-                  const Color(0xFFFFE0E0),
-              items:
-                  getByPeriod("Evening"),
-            ),
-
-            buildPlannerSection(
-              title: "Night",
-              subtitle:
-                  "9:00 PM - 12:00 AM",
-              icon:
-                  Icons.nightlight_round,
-              bgColor:
-                  const Color(0xFFE9E1FF),
-              items:
-                  getByPeriod("Night"),
-            ),
-          ],
+  Widget circleButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3E8FF),
+          borderRadius:
+              BorderRadius.circular(14),
+        ),
+        child: Icon(
+          icon,
+          color: Colors.purple,
         ),
       ),
     );
   }
-}
-
-/// CARD LAMA TETAP ADA
-Widget regCard(
-  String title, {
-  required VoidCallback onTap,
-  Color elementColor =
-      Colors.purple,
-  Color bgColor = Colors.white,
-  Color bg2Color = Colors.white,
-}) {
-  return Container(
-    margin:
-        const EdgeInsets.only(bottom: 15),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius:
-            BorderRadius.circular(16),
-        child: Container(
-          padding:
-              const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                bgColor,
-                bg2Color,
-              ],
-              begin:
-                  Alignment.centerLeft,
-              end:
-                  Alignment.centerRight,
-            ),
-            borderRadius:
-                BorderRadius.circular(
-                    20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey
-                    .withOpacity(0.05),
-                blurRadius: 10,
-                offset:
-                    const Offset(0, 4),
-              )
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment:
-                MainAxisAlignment
-                    .center,
-            children: [
-              Icon(
-                Icons.add,
-                color: elementColor,
-              ),
-              const SizedBox(
-                  width: 15),
-              Text(
-                title,
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.bold,
-                  fontSize: 16,
-                  color:
-                      elementColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
 }

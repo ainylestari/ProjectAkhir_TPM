@@ -62,7 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs =
         await SharedPreferences.getInstance();
 
-    await prefs.remove('user_id');
+    await prefs.setBool("isLoggedIn", false);
 
     if (!mounted) return;
 

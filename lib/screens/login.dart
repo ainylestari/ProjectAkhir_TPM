@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../auth_service.dart';
+import 'package:local_auth/local_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -84,6 +85,76 @@ class _LoginScreenState extends State<LoginScreen> {
       SnackBar(content: Text(message)),
     );
   }
+
+  final LocalAuthentication auth =
+    LocalAuthentication();
+
+  Future<void> loginWithBiometric() async {
+  try {
+    bool canCheck =
+        await auth.canCheckBiometrics;
+
+    bool isSupported =
+        await auth.isDeviceSupported();
+
+    final available =
+        await auth.getAvailableBiometrics();
+
+    print("canCheck: $canCheck");
+    print("isSupported: $isSupported");
+    print("available: $available");
+
+    if (!canCheck || !isSupported) {
+      showError("Biometric not supported");
+      return;
+    }
+
+    bool authenticated =
+        await auth.authenticate(
+      localizedReason:
+          "Scan fingerprint to login",
+      options: const AuthenticationOptions(
+        stickyAuth: true,
+      ),
+    );
+
+    print("authenticated: $authenticated");
+
+    if (authenticated) {
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      int userId =
+          prefs.getInt("user_id") ?? 0;
+
+      print("saved user id: $userId");
+
+      if (userId != 0) {
+        if (!mounted) return;
+
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+        );
+      } else {
+        showError(
+          "No saved session found.\nLogin manually first.",
+        );
+      }
+    } else {
+      showError(
+        "Authentication cancelled",
+      );
+    }
+  } catch (e) {
+    print("BIO ERROR: $e");
+
+    showError(
+      "Biometric failed: $e",
+    );
+  }
+}
+  
 
   @override
   void dispose() {
@@ -203,6 +274,23 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+
+                Column(
+                  children: [
+                    const Text(
+                      "Login with Fingerprint",
+                    ),
+                    IconButton(
+                      onPressed: loginWithBiometric,
+                      icon: const Icon(
+                        Icons.fingerprint,
+                        size: 48,
+                        color: Colors.purple,
                       ),
                     ),
                   ],

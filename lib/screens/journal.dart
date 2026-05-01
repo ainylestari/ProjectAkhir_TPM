@@ -120,7 +120,7 @@ class _JournalScreenState extends State<JournalScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.white,
-                                Colors.purple.shade50,
+                                Colors.white,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,

@@ -92,8 +92,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             'No Email';
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF7F2FA),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -103,11 +101,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                /// HEADER
+                const SizedBox(height: 30),
+
                 const Text(
                   "Profile",
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 28,
                     fontWeight:
                         FontWeight.bold,
                   ),

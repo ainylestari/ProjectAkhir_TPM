@@ -103,12 +103,23 @@ class DatabaseHelper {
       CREATE TABLE explore (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+        category TEXT NOT NULL,
         lat REAL NOT NULL,
         lng REAL NOT NULL,
         imagePath TEXT NOT NULL,
         description TEXT
       )
     ''');
+
+    /*dummy
+    await db.insert('explore', {
+      'name': 'Ethikopia',
+      'category': 'Cafe',
+      'lat': -7.740338,
+      'lng': 110.358367,
+      'imagePath': 'https://example.com/kopi.jpg',
+      'description': 'Kopi'
+    });*/
 
     /// chat history
     await db.execute('''
@@ -355,24 +366,52 @@ class DatabaseHelper {
   /// EXPLORE SECTION
   /// =====================================================
 
-  /// GET ALL EXPLORE DATA (Untuk LBS Radius 10km)
   Future<List<Map<String, dynamic>>> getExplore() async {
     final db = await database;
 
     return await db.query(
-      'explore', // Nama tabel yang kamu buat di _createDB
+      'explore',
       orderBy: 'id DESC',
     );
   }
 
-  /// INSERT EXPLORE DATA (Jika kamu butuh tambah data dari aplikasi)
-  Future<int> insertExplore(Map<String, dynamic> explore) async {
-    final db = await database;
-    return await db.insert('explore', explore);
+  Future<int> insertExplore(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('explore', row);
   }
 
-  /// 
+  /// =====================================================
+  /// CHAT HISTORY SECTION
+  /// =====================================================
 
+  // save chat
+  Future<int> insertChat(Map<String, dynamic> chat) async {
+    final db = await database;
+    return await db.insert('chat_history', chat);
+  }
+
+  /// fetch history
+  Future<List<Map<String, dynamic>>> getChatHistory(String email) async {
+    final db = await database;
+    return await db.query(
+      'chat_history',
+      where: 'email = ?',
+      whereArgs: [email],
+      orderBy: 'timestamp ASC', // urut dari terlama ke terbaru
+    );
+  }
+
+  /// hapus semua chat
+  Future<int> clearChat(String email) async {
+    final db = await database;
+    return await db.delete(
+      'chat_history',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+  }
+
+  // ====================
   // buat debug
   Future<void> printAllDatabase() async {
     final db = await database;

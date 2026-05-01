@@ -1,83 +1,39 @@
 import 'package:flutter/material.dart';
+import '../services/location_service.dart';
+import '../models/destination_model.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
 
   @override
-  State<ExploreScreen> createState() =>
-      _ExploreScreenState();
+  State<ExploreScreen> createState() => _ExploreScreenState();
 }
 
-class _ExploreScreenState
-    extends State<ExploreScreen> {
+class _ExploreScreenState extends State<ExploreScreen> {
+  final LocationService _locationService = LocationService();
   String selectedCategory = "All";
+  String searchQuery = "";
 
   final List<String> categories = [
     "All",
-    "Trending",
-    "Popular",
-    "Beaches",
-    "Mountains",
-    "Hidden Gems",
-    "Wellness",
+    "Restaurant",
+    "Cafe",
+    "Park",
+    "Gym",
+    "Shopping Mall",
   ];
-
-  final List<Map<String, dynamic>> places = [
-    {
-      "name": "Bali Beach",
-      "category": "Beaches",
-      "rating": 4.8,
-      "image":
-          "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-    },
-    {
-      "name": "Mount Bromo",
-      "category": "Mountains",
-      "rating": 4.9,
-      "image":
-          "https://images.unsplash.com/photo-1549880338-65ddcdfd017b",
-    },
-    {
-      "name": "Ubud Retreat",
-      "category": "Wellness",
-      "rating": 4.7,
-      "image":
-          "https://images.unsplash.com/photo-1506126613408-eca07ce68773",
-    },
-    {
-      "name": "Hidden Waterfall",
-      "category": "Hidden Gems",
-      "rating": 4.6,
-      "image":
-          "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-    },
-    {
-      "name": "Tokyo City",
-      "category": "Trending",
-      "rating": 4.8,
-      "image":
-          "https://images.unsplash.com/photo-1549692520-acc6669e2f0c",
-    },
-  ];
-
-  List<Map<String, dynamic>> get filteredPlaces {
-    if (selectedCategory == "All") return places;
-    return places
-        .where((p) => p['category'] == selectedCategory)
-        .toList();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F2FA),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// HEADER
+              const SizedBox(height: 30),
+              
               const Text(
                 "Explore Places",
                 style: TextStyle(
@@ -89,7 +45,7 @@ class _ExploreScreenState
               const SizedBox(height: 6),
 
               const Text(
-                "Discover amazing destinations around the world",
+                "Discover amazing destinations around you",
                 style: TextStyle(color: Colors.grey),
               ),
 
@@ -139,8 +95,8 @@ class _ExploreScreenState
                           gradient: isSelected
                               ? const LinearGradient(
                                   colors: [
-                                    Color(0xFFA855F7),
-                                    Color(0xFFFF4FA3),
+                                    Colors.purple,
+                                    Colors.pinkAccent,
                                   ],
                                 )
                               : null,
@@ -169,79 +125,87 @@ class _ExploreScreenState
 
               /// GRID PLACES
               Expanded(
-                child: GridView.builder(
-                  itemCount: filteredPlaces.length,
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  itemBuilder: (context, index) {
-                    final place = filteredPlaces[index];
+                child: FutureBuilder<List<Destination>>(
+                  future: _locationService.getNearbyRecommendations(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                    return Container(
-                      decoration: BoxDecoration(
-                        borderRadius:
-                            BorderRadius.circular(20),
-                        image: DecorationImage(
-                          image: NetworkImage(
-                              place['image']),
-                          fit: BoxFit.cover,
-                        ),
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return const Center(child: Text("Gagal mengambil data."));
+                    }
+
+                    // Filter Berdasarkan Kategori & Search Query
+                    final filteredPlaces = snapshot.data!.where((p) {
+                      final matchesCategory = selectedCategory == "All" || p.category == selectedCategory;
+                      final matchesSearch = p.name.toLowerCase().contains(searchQuery);
+                      return matchesCategory && matchesSearch;
+                    }).toList();
+
+                    if (filteredPlaces.isEmpty) {
+                      return const Center(child: Text("Tidak ditemukan tempat yang cocok di sekitar Anda."));
+                    }
+
+                    return GridView.builder(
+                      itemCount: filteredPlaces.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
                       ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.circular(20),
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.transparent,
-                            ],
+                      itemBuilder: (context, index) {
+                        final place = filteredPlaces[index];
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            image: DecorationImage(
+                              image: NetworkImage(place.imagePath),
+                              fit: BoxFit.cover,
+                            ),
                           ),
-                        ),
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment.end,
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              place['name'],
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [Colors.black.withOpacity(0.8), Colors.transparent],
                               ),
                             ),
-
-                            const SizedBox(height: 6),
-
-                            Row(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(
-                                  Icons.star,
-                                  color: Colors.yellow,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
                                 Text(
-                                  place['rating']
-                                      .toString(),
+                                  place.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
                                   ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on, color: Colors.redAccent, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "${place.distance?.toStringAsFixed(1)} km",
+                                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

@@ -33,11 +33,11 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   final Map<String, double> currencyRates = {
     "IDR": 1,
-    "USD": 16000,
-    "SGD": 12000,
-    "EUR": 17000,
-    "JPY": 110,
-    "KRW": 12,
+    "USD": 17334.35,
+    "SGD": 13622.28,
+    "EUR": 20322,
+    "JPY": 110.38,
+    "KRW": 11.78,
   };
 
   final List<String> timezoneList = [
@@ -111,7 +111,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
           idrValue / toRate;
 
       return finalValue
-          .toStringAsFixed(0);
+          .toStringAsFixed(2);
     } catch (e) {
       return amount;
     }
@@ -316,6 +316,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                           selectedCurrency =
                               value!;
                         });
+                        loadPlanner();
                       },
                     ),
                   ),

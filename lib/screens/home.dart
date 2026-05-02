@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
 import '/screens/navigation.dart';
 import '../database.dart';
+import '/screens/game.dart';
 import '../services/session.dart';
 import '../models/user_model.dart';
 import '/screens/chats.dart';
@@ -138,12 +139,15 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               children: [
                 quickActionCard(
+                  Icons.auto_awesome_rounded,
+                  "AI Mood Chat",
+                  [Colors.indigo, Colors.indigoAccent],
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ChatScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const ChatScreen(),
+                    ),
                   ),
-                  Icons.auto_awesome_rounded, "AI Mood Chat", 
-                  [Colors.indigo, Colors.indigoAccent.shade200]
                 ),
 
                 quickActionCard(
@@ -157,6 +161,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icons.book, "Journal", 
                   [Colors.pink, Colors.pink.shade300],
                 ),
+                
+                quickActionCard(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EmojiGameScreen()),
+                    );
+                  },
+                  Icons.sports_esports, "Game", 
+                  [Colors.orange.shade600, Colors.orange.shade300]),
                 quickActionCard(
                   onTap: () => widget.action(2),
                   Icons.sports_esports, "Game", 

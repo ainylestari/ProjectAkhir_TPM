@@ -4,6 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
 import '../services/session.dart';
 import '../services/notification_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
+import 'dart:convert';
 
 class PlannerDetailScreen extends StatefulWidget {
   final DateTime plannerdetail;
@@ -16,101 +20,91 @@ class PlannerDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<PlannerDetailScreen> createState() =>
-      _PlannerDetailScreenState();
+  State<PlannerDetailScreen> createState() => _PlannerDetailScreenState();
 }
 
-class _PlannerDetailScreenState
-    extends State<PlannerDetailScreen> {
-  final DatabaseHelper dbHelper =
-      DatabaseHelper.instance;
+class _PlannerDetailScreenState extends State<PlannerDetailScreen> {
+  final DatabaseHelper dbHelper = DatabaseHelper.instance;
 
-  final titleController =
-      TextEditingController();
-  final descriptionController =
-      TextEditingController();
-  final timeController =
-      TextEditingController();
-  final budgetController =
-      TextEditingController();
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final timeController = TextEditingController();
+  final budgetController = TextEditingController();
 
   String selectedCurrency = "IDR";
-  String selectedTimezone = "WIB";
+  String selectedTimezone = "Asia/Jakarta";
   String selectedPeriod = "Morning";
 
   bool isLoading = false;
 
-  final List<String> currencyList = [
-    "IDR",
-    "USD",
-    "SGD",
-    "EUR",
-    "JPY",
-    "KRW",
-  ];
+  List<String> currencyList = ["IDR"];
+  List<String> timezoneList = ["Asia/Jakarta"];
 
-  final List<String> timezoneList = [
-    "WIB",
-    "WITA",
-    "WIT",
-    "London",
-    "Singapore",
-    "Tokyo",
-    "Seoul",
-  ];
-
-  bool get isEdit =>
-      widget.planner != null;
+  bool get isEdit => widget.planner != null;
 
   @override
   void initState() {
     super.initState();
 
     if (isEdit) {
-      titleController.text =
-          widget.planner!['title'] ?? '';
+      titleController.text = widget.planner!['title'] ?? '';
+      descriptionController.text = widget.planner!['description'] ?? '';
+      timeController.text = widget.planner!['time'] ?? '';
+      budgetController.text = widget.planner!['budget']?.toString() ?? '';
+      selectedPeriod = widget.planner!['period'] ?? "Morning";
+    
 
-      descriptionController.text =
-          widget.planner!['description'] ?? '';
-
-      timeController.text =
-          widget.planner!['time'] ?? '';
-
-      budgetController.text =
-          widget.planner!['budget']?.toString() ??
-              '';
-
-      selectedCurrency =
-          widget.planner!['currency'] ??
-              "IDR";
-
-      selectedTimezone =
-          widget.planner!['timezone'] ??
-              "WIB";
-
-      selectedPeriod =
-          widget.planner!['period'] ??
-              "Morning";
+      selectedTimezone = widget.planner!['timezone'] ?? "Asia/Jakarta";
+      selectedCurrency = widget.planner!['currency'] ?? "IDR";
     }
+    _initDynamicData();
   }
 
+  Future<void> _initDynamicData() async {
+   // time zone
+    tzdata.initializeTimeZones();
+    List<String> loadedTimezones = tz.timeZoneDatabase.locations.keys.toList();
+
+    String detectedZone = "Asia/Jakarta";
+
+    List<String> loadedCurrencies = ["IDR"];
+      try {
+        final response = await http.get(Uri.parse('https://api.exchangerate-api.com/v4/latest/IDR'));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          loadedCurrencies = (data['rates'] as Map<String, dynamic>).keys.toList();
+        }
+      } catch (e) {
+        debugPrint("Gagal load API Mata Uang di Detail: $e");
+      }
+
+      if (mounted) {
+        setState(() {
+          timezoneList = loadedTimezones;
+          currencyList = loadedCurrencies;
+
+          if (!isEdit) {
+            selectedTimezone = timezoneList.contains(detectedZone) ? detectedZone : "Asia/Jakarta";
+          } else {
+            if (!timezoneList.contains(selectedTimezone)) timezoneList.add(selectedTimezone);
+            if (!currencyList.contains(selectedCurrency)) currencyList.add(selectedCurrency);
+          }
+        });
+      }
+    }
+
   String formatDate(DateTime date) {
-    return DateFormat(
-      "dd/MM/yyyy",
-    ).format(date);
+    return DateFormat("dd/MM/yyyy").format(date);
   }
 
   Future<void> pickTime() async {
-    TimeOfDay? picked =
-        await showTimePicker(
+    TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime:
-          TimeOfDay.now(),
+      initialTime: TimeOfDay.now(),
     );
 
     if (picked != null) {
       final now = DateTime.now();
-
       final selected = DateTime(
         now.year,
         now.month,
@@ -118,38 +112,26 @@ class _PlannerDetailScreenState
         picked.hour,
         picked.minute,
       );
-
-      final formatted =
-          DateFormat("HH:mm")
-              .format(selected);
+      final formatted = DateFormat("HH:mm").format(selected);
 
       setState(() {
-        timeController.text =
-            formatted;
+        timeController.text = formatted;
 
-        if (picked.hour >= 5 &&
-            picked.hour < 11) {
-          selectedPeriod =
-              "Morning";
-        } else if (picked.hour >= 11 &&
-            picked.hour < 15) {
-          selectedPeriod =
-              "Afternoon";
-        } else if (picked.hour >= 15 &&
-            picked.hour < 18) {
-          selectedPeriod =
-              "Evening";
+        if (picked.hour >= 5 && picked.hour < 11) {
+          selectedPeriod = "Morning";
+        } else if (picked.hour >= 11 && picked.hour < 15) {
+          selectedPeriod = "Afternoon";
+        } else if (picked.hour >= 15 && picked.hour < 18) {
+          selectedPeriod = "Evening";
         } else {
-          selectedPeriod =
-              "Night";
+          selectedPeriod = "Night";
         }
       });
     }
   }
 
   Future<void> savePlanner() async {
-    if (titleController.text.isEmpty ||
-        timeController.text.isEmpty) {
+    if (titleController.text.isEmpty || timeController.text.isEmpty) {
       showMessage(
         "Please fill required fields",
       );
@@ -205,11 +187,8 @@ class _PlannerDetailScreenState
 
       Navigator.pop(context, true);
     } catch (e) {
-      print(
-          "ERROR SAVE PLANNER: $e");
-      showMessage(
-        "Failed to save planner",
-      );
+      debugPrint("ERROR SAVE PLANNER: $e");
+      showMessage("Failed to save planner");
     }
 
     setState(() {
@@ -218,10 +197,7 @@ class _PlannerDetailScreenState
   }
 
   void showMessage(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -232,8 +208,6 @@ class _PlannerDetailScreenState
             widget.plannerdetail);
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFFF8F3FA),
       body: SafeArea(
         child: SingleChildScrollView(
           padding:
@@ -250,13 +224,8 @@ class _PlannerDetailScreenState
                 },
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.arrow_back_ios,
-                      size: 16,
-                    ),
-                    Text(
-                      "Back to Mood Plan",
-                    ),
+                    Icon(Icons.arrow_back_ios, size: 16),
+                    Text("Back to Mood Plan"),
                   ],
                 ),
               ),
@@ -309,17 +278,18 @@ class _PlannerDetailScreenState
               const SizedBox(height: 20),
 
               /// TIMEZONE
+              /// TIMEZONE
               buildLabel("Timezone"),
 
-              buildDropdownCard(
+              _searchableButton(
+                icon: Icons.access_time,
                 value: selectedTimezone,
-                items: timezoneList,
-                onChanged: (value) {
-                  setState(() {
-                    selectedTimezone =
-                        value!;
-                  });
-                },
+                onTap: () => _showSearchDialog(
+                  title: "Pilih Timezone",
+                  items: timezoneList,
+                  selected: selectedTimezone,
+                  onSelected: (value) => setState(() => selectedTimezone = value),
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -407,19 +377,15 @@ class _PlannerDetailScreenState
                 children: [
                   Expanded(
                     flex: 2,
-                    child:
-                        buildDropdownCard(
-                      value:
-                          selectedCurrency,
-                      items:
-                          currencyList,
-                      onChanged:
-                          (value) {
-                        setState(() {
-                          selectedCurrency =
-                              value!;
-                        });
-                      },
+                    child: _searchableButton(
+                      icon: Icons.attach_money,
+                      value: selectedCurrency,
+                      onTap: () => _showSearchDialog(
+                        title: "Pilih Currency",
+                        items: currencyList,
+                        selected: selectedCurrency,
+                        onSelected: (value) => setState(() => selectedCurrency = value),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -483,6 +449,111 @@ class _PlannerDetailScreenState
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // search timezone dan currency
+  void _showSearchDialog({
+  required String title,
+  required List<String> items,
+  required String selected,
+  required Function(String) onSelected,
+}) {
+  String searchQuery = '';
+  List<String> filtered = List.from(items);
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text(title),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 400,
+              child: Column(
+                children: [
+                  TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: "Search...",
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        searchQuery = value.toLowerCase();
+                        filtered = items
+                            .where((e) => e.toLowerCase().contains(searchQuery))
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final item = filtered[index];
+                        return ListTile(
+                          title: Text(item),
+                          selected: item == selected,
+                          selectedColor: Colors.purple,
+                          onTap: () {
+                            onSelected(item);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+  Widget _searchableButton({
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: Colors.purple),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down, size: 18),
+          ],
         ),
       ),
     );
@@ -566,10 +637,14 @@ class _PlannerDetailScreenState
             DropdownButton<String>(
           value: value,
           isExpanded: true,
+          menuMaxHeight: 300,
           items: items.map((e) {
             return DropdownMenuItem(
               value: e,
-              child: Text(e),
+              child: Text(
+                e, 
+                overflow: TextOverflow.ellipsis, // Menahan teks meluber
+              ),
             );
           }).toList(),
           onChanged: onChanged,

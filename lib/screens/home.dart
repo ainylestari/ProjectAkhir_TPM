@@ -171,11 +171,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   Icons.sports_esports, "Game", 
                   [Colors.orange.shade600, Colors.orange.shade300]),
-                quickActionCard(
-                  onTap: () => widget.action(2),
-                  Icons.sports_esports, "Game", 
-                  [Colors.orange.shade600, Colors.orange.shade300]
-                ),
               ],
             ),
           ],

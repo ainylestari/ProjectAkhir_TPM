@@ -5,6 +5,7 @@ import 'profile_edit.dart';
 import 'dart:io';
 import '../services/session.dart';
 import '../models/user_model.dart';
+import 'kesan.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -314,42 +315,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 18),
 
                 /// FEEDBACK
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 20,
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const KesanScreen()),
                   ),
-                  decoration:
-                      BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.circular(
-                            22),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(
-                        Icons
-                            .chat_bubble_outline,
-                        color:
-                            Colors.blue,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          "Saran & Kesan TPM",
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 20,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          color: Colors.blue,
                         ),
-                      ),
-                      Icon(
-                        Icons
-                            .chevron_right,
-                        color:
-                            Colors.grey,
-                      ),
-                    ],
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text("Saran & Kesan TPM"),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+
 
                 const SizedBox(height: 30),
 

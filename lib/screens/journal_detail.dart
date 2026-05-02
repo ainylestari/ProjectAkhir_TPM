@@ -152,9 +152,8 @@ class _JournalDetailScreenState
               ? "Edit Journal"
               : "Write Journal",
         ),
-        backgroundColor: Color.fromARGB(255, 255, 244, 255),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment:

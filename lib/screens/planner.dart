@@ -3,7 +3,10 @@ import 'planner_detail.dart';
 import 'package:intl/intl.dart';
 import '../database.dart';
 import '../services/session.dart';
-import '../models/user_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:timezone/timezone.dart' as tz;
+import 'dart:convert';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
@@ -18,52 +21,56 @@ class _PlannerScreenState extends State<PlannerScreen> {
   DateTime selectedDate = DateTime.now();
 
   String selectedCurrency = "IDR";
-  String selectedTimezone = "WIB";
+  String selectedTimezone = "Asia/Jakarta";
 
   List<Map<String, dynamic>> plannerList = [];
 
-  final List<String> currencyList = [
-    "IDR",
-    "USD",
-    "SGD",
-    "EUR",
-    "JPY",
-    "KRW",
-  ];
-
-  final Map<String, double> currencyRates = {
-    "IDR": 1,
-    "USD": 17334.35,
-    "SGD": 13622.28,
-    "EUR": 20322,
-    "JPY": 110.38,
-    "KRW": 11.78,
-  };
-
-  final List<String> timezoneList = [
-    "WIB",
-    "WITA",
-    "WIT",
-    "London",
-    "Singapore",
-    "Tokyo",
-    "Seoul",
-  ];
-
-  final Map<String, int> timezoneOffset = {
-    "WIB": 7,
-    "WITA": 8,
-    "WIT": 9,
-    "London": 0,
-    "Singapore": 8,
-    "Tokyo": 9,
-    "Seoul": 9,
-  };
+  List<String> currencyList = ["IDR"];
+  Map<String, double> currencyRates = {"IDR": 1.0};
+  
+  List<String> timezoneList = ["Asia/Jakarta"];
 
   @override
   void initState() {
     super.initState();
+    _initDynamicData();
+  }
+
+  // setup zona waktu biar otomatis
+  Future<void> _initDynamicData() async {
+    tzdata.initializeTimeZones();
+    
+    if (mounted) {
+      setState(() {
+        timezoneList = tz.timeZoneDatabase.locations.keys.toList();
+        timezoneList = timezoneList.toSet().toList();
+        selectedTimezone = "Asia/Jakarta";
+      });
+    }
+    await _fetchLiveCurrency();
     loadPlanner();
+  }
+
+  // realtime currency
+  Future<void> _fetchLiveCurrency() async {
+    try {
+      final response = await http.get(Uri.parse('https://api.exchangerate-api.com/v4/latest/IDR'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final rates = data['rates'] as Map<String, dynamic>;
+        
+        if (mounted) {
+          setState(() {
+            currencyList = rates.keys.toList();
+            rates.forEach((key, value) {
+              currencyRates[key] = 1 / (value as num).toDouble();
+            });
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Gagal update kurs: $e");
+    }
   }
 
   Future<void> loadPlanner() async {
@@ -88,46 +95,43 @@ class _PlannerScreenState extends State<PlannerScreen> {
     loadPlanner();
   }
 
-  String convertBudget(
-    String amount,
-    String fromCurrency,
-  ) {
+  String convertBudget(String amount, String fromCurrency) {
     try {
-      double value =
-          double.tryParse(amount) ?? 0;
+      double value = double.tryParse(amount) ?? 0;
+      double fromRate = currencyRates[fromCurrency] ?? 1;
+      double toRate = currencyRates[selectedCurrency] ?? 1;
 
-      double fromRate =
-          currencyRates[fromCurrency] ?? 1;
+      // convert ke IDR dulu
+      double idrValue = value * fromRate;
+      // baru ke target currency
+      double finalValue = idrValue / toRate;
 
-      double toRate =
-          currencyRates[selectedCurrency] ?? 1;
-
-      /// convert ke IDR dulu
-      double idrValue =
-          value * fromRate;
-
-      /// lalu ke target currency
-      double finalValue =
-          idrValue / toRate;
-
-      return finalValue
-          .toStringAsFixed(2);
+      return finalValue.toStringAsFixed(2);
     } catch (e) {
       return amount;
     }
   }
 
-  String convertTime(
-    String originalTime,
-    String fromTimezone,
-  ) {
+  // selisih waktu indonesia
+  int getOffsetHours(String tzName) {
+    if (tzName == "WIB") return 7;
+    if (tzName == "WITA") return 8;
+    if (tzName == "WIT") return 9;
+    try {
+      return tz.getLocation(tzName).currentTimeZone.offset ~/ 3600000;
+    } catch (e) {
+      return 7; // Default
+    }
+  }
+
+  String convertTime(String originalTime, String fromTimezone) {
     try {
       final parts = originalTime.split(":");
       int hour = int.parse(parts[0]);
       int minute = int.parse(parts[1]);
 
-      int fromOffset = timezoneOffset[fromTimezone] ?? 7;
-      int toOffset = timezoneOffset[selectedTimezone] ?? 7;
+      int fromOffset = getOffsetHours(fromTimezone);
+      int toOffset = getOffsetHours(selectedTimezone);
 
       int diff = toOffset - fromOffset;
 
@@ -166,7 +170,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
     return plannerList.where((item) {
       final convertedTime = convertTime(
         item['time'] ?? "09:00",
-        item['timezone'] ?? "WIB",
+        item['timezone'] ?? "Asia/Jakarta",
       );
 
       final autoPeriod =
@@ -285,42 +289,74 @@ class _PlannerScreenState extends State<PlannerScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: topDropdownCard(
-                      icon:
-                          Icons.public,
-                      value:
-                          selectedTimezone,
-                      items:
-                          timezoneList,
-                      onChanged:
-                          (value) {
-                        setState(() {
-                          selectedTimezone =
-                              value!;
-                        });
-                      },
+                    child: _searchableButton(
+                      icon: Icons.access_time,
+                      value: selectedTimezone,
+                      onTap: () => _showSearchDialog(
+                        title: "Pilih Timezone",
+                        items: timezoneList,
+                        selected: selectedTimezone,
+                        onSelected: (value) => setState(() => selectedTimezone = value),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: topDropdownCard(
-                      icon:
-                          Icons.attach_money,
-                      value:
-                          selectedCurrency,
-                      items:
-                          currencyList,
-                      onChanged:
-                          (value) {
-                        setState(() {
-                          selectedCurrency =
-                              value!;
-                        });
-                        loadPlanner();
-                      },
+                    child: _searchableButton(
+                      icon: Icons.attach_money,
+                      value: selectedCurrency,
+                      onTap: () => _showSearchDialog(
+                        title: "Pilih Currency",
+                        items: currencyList,
+                        selected: selectedCurrency,
+                        onSelected: (value) {
+                          setState(() => selectedCurrency = value);
+                          loadPlanner();
+                        },
+                      ),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 20),
+
+              /// ADD PLAN BUTTON
+              GestureDetector(
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PlannerDetailScreen(
+                        plannerdetail: selectedDate,
+                      ),
+                    ),
+                  );
+                  if (result == true) {
+                    loadPlanner();
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.purple, Colors.pinkAccent], // ganti warna di sini
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      "+ Add to Mood Plan",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 20),
@@ -367,58 +403,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
                     const Color(0xFFE8E5FF),
                 icon:
                     Icons.nightlight_outlined,
-              ),
-
-              const SizedBox(height: 20),
-
-              /// ADD PLAN BUTTON
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final result =
-                        await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PlannerDetailScreen(
-                          plannerdetail:
-                              selectedDate,
-                        ),
-                      ),
-                    );
-
-                    if (result == true) {
-                      loadPlanner();
-                    }
-                  },
-                  style:
-                      ElevatedButton.styleFrom(
-                    padding:
-                        const EdgeInsets
-                            .symmetric(
-                      vertical: 18,
-                    ),
-                    backgroundColor:
-                        Colors.purple,
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                                  20),
-                    ),
-                  ),
-                  child: const Text(
-                    "+ Add to Mood Plan",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight:
-                          FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
@@ -634,6 +618,111 @@ class _PlannerScreenState extends State<PlannerScreen> {
     );
   }
 
+  // search timezone dan currency
+  void _showSearchDialog({
+  required String title,
+  required List<String> items,
+  required String selected,
+  required Function(String) onSelected,
+}) {
+  String searchQuery = '';
+  List<String> filtered = List.from(items);
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text(title),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 400,
+              child: Column(
+                children: [
+                  TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: "Search...",
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        searchQuery = value.toLowerCase();
+                        filtered = items
+                            .where((e) => e.toLowerCase().contains(searchQuery))
+                            .toList();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final item = filtered[index];
+                        return ListTile(
+                          title: Text(item),
+                          selected: item == selected,
+                          selectedColor: Colors.purple,
+                          onTap: () {
+                            onSelected(item);
+                            Navigator.pop(context);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+  Widget _searchableButton({
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: Colors.purple),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget topDropdownCard({
     required IconData icon,
     required String value,
@@ -661,6 +750,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
       child: DropdownButton<String>(
         value: value,
         isExpanded: true,
+        menuMaxHeight: 300,
         underline: const SizedBox(),
         icon:
             const Icon(Icons.keyboard_arrow_down),
@@ -675,7 +765,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   color: Colors.purple,
                 ),
                 const SizedBox(width: 8),
-                Text(e),
+                Expanded(
+                  child: Text(
+                    e, 
+                    overflow: TextOverflow.ellipsis,
+                  )
+                ),
               ],
             ),
           );

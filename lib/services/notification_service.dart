@@ -11,7 +11,7 @@ class NotificationService {
   await _notifications.show(
     999,
     "Test Notifikasi",
-    "Kalau ini muncul, setup sudah benar",
+    "Selamat Datang!",
     const NotificationDetails(
       android: AndroidNotificationDetails(
         'planner_channel',
@@ -55,7 +55,15 @@ class NotificationService {
     required String date, // format dd/mm/yyyy
     required String time, // format hh:mm
   }) async {
-    // parse tanggal dan waktu
+    tz_data.initializeTimeZones();
+    
+    final String localTz = DateTime.now().timeZoneName;
+    try {
+      tz.setLocalLocation(tz.getLocation(localTz));
+    } catch (e) {
+      tz.setLocalLocation(tz.getLocation('Asia/Jakarta')); // fallback
+    }
+
     final parts = date.split('/');
     final timeParts = time.split(':');
 

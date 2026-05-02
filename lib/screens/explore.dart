@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import '../services/location_service.dart';
 import '../models/destination_model.dart';
 import '../services/session.dart';
 import '../database.dart';
+import '../screens/explore_detail.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -243,7 +245,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         
                         return GestureDetector(
                           onTap: () {
-                            // navigasi ke detail bisa ditaruh di sini nanti
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ExploreDetailScreen(poi: LatLng(place.lat, place.lng), place: place)),
+                            );
                           },
                           child: Container(
                             decoration: BoxDecoration(

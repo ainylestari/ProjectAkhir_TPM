@@ -5,6 +5,7 @@ import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../database.dart';
 
 // --- GAME ENGINE ---
@@ -18,7 +19,6 @@ class EmojiJumpGame extends FlameGame with HasCollisionDetection {
 
   @override
   Future<void> onLoad() async {
-    // Background Hijau Lembut sesuai konsep TikTok
     add(RectangleComponent(size: size, paint: Paint()..color = const Color.fromARGB(255, 255, 244, 255)));
 
     scoreText = TextComponent(
@@ -87,6 +87,8 @@ class EmojiJumpGame extends FlameGame with HasCollisionDetection {
       
       await Future.delayed(const Duration(milliseconds: 50));      
       pauseEngine();
+      
+      WakelockPlus.disable();
       // 3. Simpan skor ke database[cite: 1]
       int currentHighScore = await DatabaseHelper.instance.getGlobalHighScore(); 
       if (score > currentHighScore) {
@@ -101,6 +103,7 @@ class Player extends PositionComponent with HasGameRef<EmojiJumpGame>, Collision
   double velocityY = 0;
   double gravity = 15.0;
   double jumpStrength = -650.0;
+  double targetTiltX = 0.0;
   StreamSubscription? _sub;
 
   Player(this.char) : super(size: Vector2(50, 50), anchor: Anchor.center);
@@ -113,19 +116,27 @@ class Player extends PositionComponent with HasGameRef<EmojiJumpGame>, Collision
     position = Vector2(gameRef.size.x / 2, gameRef.size.y - 150);
     
     _sub = accelerometerEvents.listen((e) {
-      // Logika gerak kanan-kiri via HP[cite: 2]
-      position.x -= e.x * 6;
-      if (position.x < 0) position.x = gameRef.size.x;
-      if (position.x > gameRef.size.x) position.x = 0;
+      
+      // miring kanan-kiri, nilai e.x bisa positif (miring ke kiri) atau negatif (miring ke kanan)
+      targetTiltX = e.x;
     });
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+    // jatuh gravitasi + lompat
     velocityY += gravity;
+
     y += velocityY * dt;
-  }
+
+    // gerak kanan-kiri berdasarkan targetTiltX + multiplier kecepatan
+    position.x -= targetTiltX * 150 * dt;
+
+  // tembus kanan kiri
+  if (position.x < 0) position.x = gameRef.size.x;
+    if (position.x > gameRef.size.x) position.x = 0;
+  } 
 
   void jump() { if (velocityY > 0) velocityY = jumpStrength; }
 
@@ -145,7 +156,7 @@ class Platform extends PositionComponent with CollisionCallbacks {
   Future<void> onLoad() async {
     add(RectangleComponent(
       size: size, 
-      paint: Paint()..color = isGround ? Colors.brown : Colors.purple[800]!
+      paint: Paint()..color = isGround ? Color.fromRGBO(255, 93, 155, 82) : Colors.purple[800]!
     ));
     add(RectangleHitbox());
   }
@@ -183,6 +194,7 @@ class _EmojiGameScreenState extends State<EmojiGameScreen> {
       setState(() {
         game = EmojiJumpGame(selectedEmoji: selectedEmoji!);
       });
+      WakelockPlus.enable();
     }
   }
 
@@ -210,7 +222,6 @@ class _EmojiGameScreenState extends State<EmojiGameScreen> {
 
   Widget _buildSelectionMenu() {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 244, 255),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -221,8 +232,10 @@ class _EmojiGameScreenState extends State<EmojiGameScreen> {
               color: Colors.grey),
             ),
             const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 10,
               children: ['😃', '😐', '😭', '😡'].map((e) => _emojiButton(e)).toList(),
             ),
             const SizedBox(height: 50),
@@ -264,31 +277,56 @@ class _EmojiGameScreenState extends State<EmojiGameScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("GAME OVER!", style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold, color: Colors.red)),
-              const Divider(height: 40),
-              Text("YOUR SCORE: ${g.score}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 30),
-              const Text(
-                "Game over, but not your journey! Bounce back and beat your score!",
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)
-                ),
-                onPressed: () => setState(() {
-                  selectedEmoji = null;
-                  game = null;
-                }),
-                child: const Text("Play Again!"),
-              ),
-            ],
+          child: FutureBuilder<int>(
+            future: DatabaseHelper.instance.getGlobalHighScore(),
+            builder: (context, snapshot) {
+              
+              int highScore = snapshot.data ?? 0;
+              
+              bool isNewRecord = g.score >= highScore && g.score > 0;
+              
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isNewRecord ? "NEW RECORD" : "GAME OVER", 
+                    style: TextStyle(
+                      fontSize: 35, 
+                      fontWeight: FontWeight.bold, 
+                      color: isNewRecord ? Colors.green : Colors.red
+                    )
+                  ),
+
+                  const Divider(height: 40),
+
+                  Text("your score: ${g.score}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+
+                  const SizedBox(height: 10),
+
+                  Text("high score: $highScore", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  
+                  const SizedBox(height: 30),
+                  
+                  const Text(
+                    "Game over, but not your journey! Bounce back and beat your score!",
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15)
+                    ),
+                    onPressed: () => setState(() {
+                      selectedEmoji = null;
+                      game = null;
+                    }),
+                    child: const Text("Play Again!"),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

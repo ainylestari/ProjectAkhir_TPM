@@ -22,8 +22,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     "Restaurant",
     "Cafe and Bar",
     "Park",
-    "Gym",
     "Shopping",
+    "Entertainment",
+    "Gym",
     "Salon and Spa",
     "Health",
   ];
@@ -178,6 +179,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           "scenic", "viewpoint", "waterfall", "nature reserve", "national park", "state park", "city park", 
                           "amusement park", "theme park", "kebun raya", "hutan", "cagar alam", "lapangan", "alun-alun", "museum", 
                           "monument", "landmark"
+                        ],
+                        "Entertainment": [
+                          "cinema", "theater", "museum", "art", "music", "concert", "gallery", "exhibition", "performance",
+                          "festival", "event", "arcade", "bowling", "karaoke", "film","planetarium", "observatory", "library",
+                          "bioskop", "teater", "seni", "musik", "konser", "galeri", "pameran", "pertunjukan", "club"
+                          "festival", "acara", "klub", "live music", "stand-up comedy", "karaoke", "escape room", "bookstore"
+                          "virtual reality", "gaming center", "roller coaster", "water park", "zoo", "aquarium", 
                         ],
                         "Gym": [
                           "gym", "fitness", "sport", "exercise", "workout", "training", "yoga", "pilates", "boxing", 

@@ -52,23 +52,24 @@ class NotificationService {
   static Future<void> schedulePlannerNotification({
     required int id,
     required String title,
-    required String date, // format dd/MM/yyyy
-    required String time, // format HH:mm
+    required String date, // format dd/mm/yyyy
+    required String time, // format hh:mm
   }) async {
     // parse tanggal dan waktu
     final parts = date.split('/');
     final timeParts = time.split(':');
 
+    // buat objek TZDateTime untuk waktu notifikasi
     final scheduledTime = tz.TZDateTime(
       tz.local,
-      int.parse(parts[2]), // year
-      int.parse(parts[1]), // month
-      int.parse(parts[0]), // day
-      int.parse(timeParts[0]), // hour
-      int.parse(timeParts[1]), // minute
-    ).subtract(const Duration(seconds: 3)); // 1 jam sebelumnya
+      int.parse(parts[2]), // index ke 2 dr depan, bagian tahun (yyyy)
+      int.parse(parts[1]), // index ke 1 dr depan, bagian bulan (mm)
+      int.parse(parts[0]), // 0 dr depan, bagian hari (dd)
+      int.parse(timeParts[0]), // 0 dr depan, bagian jam (hh)
+      int.parse(timeParts[1]), // 1 dr depan, bagian menit (mm)
+    ).subtract(const Duration(hours: 1)); // notif masuk 1 jam sebelum acara (waktu acara - 1 jam)
 
-    // kalau waktunya sudah lewat, skip
+    // kalau waktunya sudah lewat local time, skip
     if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
 
     try {
@@ -90,6 +91,7 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
+      //debug
       print("zonedSchedule berhasil dipanggil untuk id: $id");
     } catch (e) {
       print("ERROR zonedSchedule: $e");

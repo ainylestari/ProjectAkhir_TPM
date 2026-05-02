@@ -242,8 +242,7 @@ class DatabaseHelper {
   }
 
   /// GET ALL JOURNALS
-  Future<List<Map<String, dynamic>>>
-      getJournals() async {
+  Future<List<Map<String, dynamic>>>getJournals(int userId) async {
     final db = await database;
 
     return await db.query(
@@ -253,28 +252,18 @@ class DatabaseHelper {
   }
 
   /// GET JOURNAL BY ID
-  Future<Map<String, dynamic>?>
-      getJournalById(int id) async {
+  Future<List<Map<String, dynamic>>> getJournalsById(int userId) async {
     final db = await database;
-
-    final result = await db.query(
+    return await db.query(
       'journals',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'id DESC',
     );
-
-    if (result.isNotEmpty) {
-      return result.first;
-    }
-
-    return null;
   }
 
   /// UPDATE JOURNAL
-  Future<int> updateJournal(
-    int id,
-    Map<String, dynamic> journal,
-  ) async {
+  Future<int> updateJournal(int id, Map<String, dynamic> journal) async {
     final db = await database;
 
     return await db.update(
@@ -313,8 +302,7 @@ class DatabaseHelper {
   }
 
   /// GET ALL PLANNERS
-  Future<List<Map<String, dynamic>>>
-      getPlanners() async {
+  Future<List<Map<String, dynamic>>> getPlanners() async {
     final db = await database;
 
     return await db.query(
@@ -324,21 +312,14 @@ class DatabaseHelper {
   }
 
   /// GET PLANNER BY ID
-  Future<Map<String, dynamic>?>
-      getPlannerById(int id) async {
-    final db = await database;
-
-    final result = await db.query(
+  Future<List<Map<String, dynamic>>> getPlannersById(int userId) async {
+  final db = await database;
+    return await db.query(
       'planners',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'id DESC',
     );
-
-    if (result.isNotEmpty) {
-      return result.first;
-    }
-
-    return null;
   }
 
   /// UPDATE PLANNER
@@ -367,29 +348,13 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getPlannerByDate(
-    String date,
-  ) async {
+  Future<List<Map<String, dynamic>>> getPlannerByDate(String date, int userId) async {
     final db = await database;
-
     return await db.query(
       'planners',
-      where: 'date = ?',
-      whereArgs: [date],
+      where: 'date = ? AND user_id = ?',
+      whereArgs: [date, userId],
       orderBy: 'time ASC',
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> getAllPlanner(
-    int userId,
-  ) async {
-    final db = await database;
-
-    return await db.query(
-      'planners',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'date ASC, time ASC',
     );
   }
 

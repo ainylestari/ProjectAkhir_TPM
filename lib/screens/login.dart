@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 import 'package:local_auth/local_auth.dart';
+import '../services/session.dart';
+import '../models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,23 +53,21 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (user != null) {
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setInt('user_id', user['id']);
-        await prefs.setString('username', user['username']);
-        await prefs.setString('email', user['email']);
-        await prefs.setBool('is_logged_in', true);
+        final session = SessionManager();
+        await session.login(UserModel(
+          id: user['id'].toString(),
+          username: user['username'],
+          email: user['email'],
+          token: '',
+        ));
 
         showError("Login berhasil");
 
         await Future.delayed(const Duration(seconds: 1));
 
         if (!mounted) return;
-
-        Navigator.pushReplacementNamed(
-          context,
-          '/home',
-        );
+        
+        Navigator.pushReplacementNamed(context,'/home');
       } else {
         showError("Email atau password salah");
       }
@@ -121,25 +121,13 @@ class _LoginScreenState extends State<LoginScreen> {
     print("authenticated: $authenticated");
 
     if (authenticated) {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final hasSession = await SessionManager().hasSession();
 
-      int userId =
-          prefs.getInt("user_id") ?? 0;
-
-      print("saved user id: $userId");
-
-      if (userId != 0) {
+      if (hasSession) {
         if (!mounted) return;
-
-        Navigator.pushReplacementNamed(
-          context,
-          '/home',
-        );
+        Navigator.pushReplacementNamed(context, '/home');
       } else {
-        showError(
-          "No saved session found.\nLogin manually first.",
-        );
+        showError("No saved session found.\nLogin manually first.");
       }
     } else {
       showError(

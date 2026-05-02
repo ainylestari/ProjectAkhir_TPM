@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
-
+import '../services/session.dart';
 class PlannerDetailScreen extends StatefulWidget {
   final DateTime plannerdetail;
   final Map<String, dynamic>? planner;
@@ -159,17 +159,10 @@ class _PlannerDetailScreenState
     });
 
     try {
-      final prefs =
-          await SharedPreferences
-              .getInstance();
+      final user = await SessionManager().getUser();
 
-      int userId =
-          prefs.getInt('user_id') ?? 0;
-
-      if (userId == 0) {
-        showMessage(
-          "User not logged in",
-        );
+      if (user == null) {
+        showMessage("User belum login");
         return;
       }
 
@@ -193,7 +186,7 @@ class _PlannerDetailScreenState
             ? widget.planner!['date']
             : formatDate(
                 widget.plannerdetail),
-        "user_id": userId,
+        "user_id": int.parse(user.id),
       };
 
       if (isEdit) {

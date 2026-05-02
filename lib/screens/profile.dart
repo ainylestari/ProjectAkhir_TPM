@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
 import 'profile_edit.dart';
 import 'dart:io';
+import '../services/session.dart';
+import '../models/user_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,7 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final DatabaseHelper dbHelper =
       DatabaseHelper.instance;
 
-  Map<String, dynamic>? userData;
+  UserModel? userData;
   bool biometricEnabled = true;
   bool isLoading = true;
 
@@ -27,49 +29,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadUserProfile() async {
-    try {
-      final prefs =
-          await SharedPreferences.getInstance();
-
-      int userId =
-          prefs.getInt('user_id') ?? 0;
-
-      if (userId == 0) {
-        if (!mounted) return;
-
-        Navigator.pushReplacementNamed(
-          context,
-          '/login',
-        );
-        return;
-      }
-
-      final user =
-          await dbHelper.getUserById(userId);
-
-      setState(() {
-        userData = user;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+    final session = SessionManager();
+    final user = await session.getUser();
+    if (user == null) {
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
     }
+    if (!mounted) return;
+    setState(() {
+      userData = user;
+      isLoading = false;
+    });
   }
 
   Future<void> handleLogout() async {
-    final prefs =
-        await SharedPreferences.getInstance();
-
-    await prefs.setBool("isLoggedIn", false);
-
+    await SessionManager().logout(); // hapus session
     if (!mounted) return;
-
-    Navigator.pushReplacementNamed(
-      context,
-      '/login',
-    );
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -83,13 +59,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    String username =
-        userData?['username'] ??
-            'User';
-
-    String email =
-        userData?['email'] ??
-            'No Email';
+    String username = userData?.username ?? 'User';
+    String email = userData?.email ?? 'No Email';
 
     return Scaffold(
       body: SafeArea(
@@ -101,8 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment:
                   CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 30),
-
                 const Text(
                   "Profile",
                   style: TextStyle(
@@ -162,22 +131,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Color(0xFFFF6FB5),
                                 ],
                               ),
-                              image: userData?['image'] != null &&
-                                      userData!['image']
-                                          .toString()
-                                          .isNotEmpty
+                              image: userData?.image != null &&
+                                      userData!.image.toString().isNotEmpty
                                   ? DecorationImage(
                                       image: FileImage(
-                                        File(userData!['image']),
+                                        File(userData!.image!),
                                       ),
                                       fit: BoxFit.cover,
                                     )
                                   : null,
                             ),
-                            child: userData?['image'] == null ||
-                                    userData!['image']
-                                        .toString()
-                                        .isEmpty
+                            child: userData?.image == null ||
+                                    userData!.image!.isEmpty
                                 ? const Icon(
                                     Icons.person_outline,
                                     color: Colors.white,
@@ -245,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EditProfileScreen(
-                                  user: userData!, // FIX HERE
+                                  user: userData!,
                                 ),
                               ),
                             );

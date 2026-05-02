@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'planner_detail.dart';
 import 'package:intl/intl.dart';
 import '../database.dart';
+import '../services/session.dart';
+import '../models/user_model.dart';
 
 class PlannerScreen extends StatefulWidget {
   const PlannerScreen({super.key});
@@ -65,10 +67,14 @@ class _PlannerScreenState extends State<PlannerScreen> {
   }
 
   Future<void> loadPlanner() async {
+    final user = await SessionManager().getUser();
+    
+    if (user == null) return;
+
     final data = await dbHelper.getPlannerByDate(
       DateFormat("dd/MM/yyyy").format(selectedDate),
+      int.parse(user.id),
     );
-
     setState(() {
       plannerList = data;
     });
@@ -173,7 +179,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F3FA),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(18),
@@ -181,11 +186,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
             crossAxisAlignment:
                 CrossAxisAlignment.start,
             children: [
-              /// TITLE
               const Text(
                 "My Mood Plan",
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),

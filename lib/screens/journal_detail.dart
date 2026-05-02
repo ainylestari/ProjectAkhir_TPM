@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
+import '../services/session.dart';
+import '../models/user_model.dart';
 
 class JournalDetailScreen extends StatefulWidget {
   final DateTime journaldetail;
@@ -68,10 +70,9 @@ class _JournalDetailScreenState
 
     try {
       /// ambil user login dari session
-      final prefs = await SharedPreferences.getInstance();
-      int userId = prefs.getInt('user_id') ?? 0;
+      final user = await SessionManager().getUser();
 
-      if (userId == 0) {
+      if (user == null) {
         showMessage("User belum login");
         return;
       }
@@ -81,7 +82,7 @@ class _JournalDetailScreenState
         'content': content,
         'date': date,
         'image': '',
-        'user_id': userId,
+        'user_id': int.parse(user.id),
       };
 
       /// kalau edit → update

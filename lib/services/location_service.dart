@@ -1,7 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 import '../models/destination_model.dart';
 import '/database.dart';
-import 'osm_service.dart';
+//import 'osm_service.dart';
 import 'fsq_service.dart';
 
 class LocationService {
@@ -30,14 +30,14 @@ class LocationService {
     // ambil destinasi dari mapping database
     List<Map<String, dynamic>> rawData = await _dbHelper.getExplore();
 
-    bool hasRelevantData = rawData.any((e) => 
-    e['category'].toString().toLowerCase().contains(category?.toLowerCase() ?? ""));
+    bool hasRelevantData = category == null || category == "All" || rawData.any((e) => 
+    e['category'].toString().toLowerCase().contains(category.toLowerCase()));
 
-    if (rawData.isEmpty || (category != "All" && !hasRelevantData)) {
+    if (rawData.isEmpty || (category != null && category != "All" && !hasRelevantData)) {
       final fsqData = await _fsqService.fetchNearbyPlaces(
         userPos.latitude, 
         userPos.longitude,
-        query: (category == null || category == "All") ? "" : category
+        query: (category == null || category == "All") ? "" : category,
       );
     
       // simpan hasil biar nggak download lagi
@@ -49,18 +49,28 @@ class LocationService {
             ? categories[0]['name'] // ambil nama kayak 'Coffee Shop' atau 'Park'
             : 'General';
 
+        // Gambar dari FSQ
+        String fsqImage = 'assets/images/default.png';
+        if (categories.isNotEmpty && categories[0]['icon'] != null) {
+          final icon = categories[0]['icon'];
+          fsqImage = "${icon['prefix']}88${icon['suffix']}";
+        }
+
         await _dbHelper.insertExplore({
           'name': element['name'] ?? 'Unnamed Place',
           'category': categoryName,
-          'lat': element['geocodes']['main']['latitude'],
-          'lng': element['geocodes']['main']['longitude'],
-          'imagePath': 'assets/images/default.png', 
+          'lat': element['latitude'] ?? 0.0,
+          'lng': element['longitude'] ?? 0.0,
+          'imagePath': fsqImage,
           'description': element['location']['formatted_address'] ?? 'Lokasi di sekitar kamu'
         });
       }
       
       // ambil ulang data yang disimpan
       rawData = await _dbHelper.getExplore();
+
+      // debug
+      print("hasil fetch FSQ: ${fsqData.length}");
     }
 
       List<Destination> allDestinations = rawData.map((e) => Destination.fromMap(e)).toList();

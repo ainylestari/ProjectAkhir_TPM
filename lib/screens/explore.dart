@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/location_service.dart';
 import '../models/destination_model.dart';
+import '../services/session.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -13,15 +14,24 @@ class _ExploreScreenState extends State<ExploreScreen> {
   final LocationService _locationService = LocationService();
   String selectedCategory = "All";
   String searchQuery = "";
+  late Future<List<Destination>> _nearbyFuture;
 
   final List<String> categories = [
     "All",
     "Restaurant",
-    "Cafe",
+    "Cafe and Bar",
     "Park",
     "Gym",
-    "Shopping Mall",
+    "Shopping",
+    "Salon and Spa",
+    "Health",
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _nearbyFuture = _locationService.getNearbyRecommendations();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +42,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 30),
               
               const Text(
                 "Explore Places",
@@ -42,7 +51,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
 
               const Text(
                 "Discover amazing destinations around you",
@@ -131,7 +140,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               /// GRID PLACES
               Expanded(
                 child: FutureBuilder<List<Destination>>(
-                  future: _locationService.getNearbyRecommendations(),
+                  future: _nearbyFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -143,9 +152,56 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
                     // filter berdasarkan kata kunci kategori & search
                     final filteredPlaces = snapshot.data!.where((p) {
+                      // mapping kategori ke keyword untuk pencocokan
+                      const categoryKeywords = {
+                        "Restaurant": [
+                          "restaurant", "food", "dining", "eatery", "bistro", "warung", "makan", "resto", "grill", 
+                          "steakhouse", "seafood", "bbq", "buffet", "cuisine", "noodle", "eat", "eatery", "food court",
+                          "sushi", "fast food", "street food", "fine dining", "gastropub", "pizza"
+                        ],
+                        "Cafe and Bar": [
+                          "cafe", "coffee", "bakery", "breakfast", "tea", "bar", "kopi", "espresso", "latte", "pastry", 
+                          "dessert", "juice", "smoothie", "cocktail", "pub", "lounge", "winery", "brewery",
+                          "roastery", "ice cream", "gelato", "bubble tea", "milkshake", "brunch", "club", "karaoke"
+                        ],
+                        "Park": [
+                          "park", "garden", "taman", "nature", "outdoor", "playground", "recreation", "green", "forest", 
+                          "trail", "hiking", "picnic", "zoo", "botanical", "wildlife", "lake", "river", "beach", "camping", 
+                          "scenic", "viewpoint", "waterfall", "nature reserve", "national park", "state park", "city park", 
+                          "amusement park", "theme park", "kebun raya", "hutan", "cagar alam", "lapangan", "alun-alun", "museum", 
+                          "monument", "landmark"
+                        ],
+                        "Gym": [
+                          "gym", "fitness", "sport", "exercise", "workout", "training", "yoga", "pilates", "boxing", 
+                          "martial arts", "swimming pool", "climbing", "dance", "fitness center", "wellness center", 
+                          "gymnasium", "athletic", "recreation center", "outdoor gym", "running track", "cycling", 
+                          "kolam renang", "weightlifting", "olahraga", "senam"
+                        ],
+                        "Shopping": [
+                          "mall", "shopping", "market", "plaza", "supermarket", "store", "boutique", "outlet", "retail", 
+                          "fashion", "clothing", "electronics", "grocery", "furniture", "department store", "handicraft", 
+                          "souvenir", "bazaar", "pasar", "toko", "perbelanjaan", "perdagangan", "shopping center", "shoes", 
+                          "accessories", "jewelry", "bookstore", "toy", "pet store", "buku", "sepatu", "tas", "aksesoris"
+                          "perhiasan", "skincare", "cosmetic"
+                        ],
+                        "Salon and Spa": [
+                          "salon", "beauty", "spa", "wellness", "hair", "massage", "nail", "barber", "skin", "kecantikan",
+                          "tattoo", "piercing", "skincare", "cosmetic", "aesthetic", "grooming", "facial", "body treatment",
+                          "kulit", "pijat", "reflexology", "manicure", "pedicure", "barbershop", "salon kecantikan", "spa kecantikan", "perawatan tubuh", "perawatan wajah"
+                        ],
+                        "Health": [
+                          "hospital", "clinic", "pharmacy", "health", "medical", "doctor", "dentist", "fisioterapi",
+                          "emergency", "physiotherapy", "mental", "counseling", "therapy", "rehabilitation",  "rehab",
+                          "chiropractic", "acupuncture", "maternity", "nurse", "physician", "rumah sakit", "klinik", "apotik", 
+                          "kesehatan", "dokter", "dokter gigi", "darurat", "farmasi", "psikolog", "konseling", "terapi",
+                          "akupunktur", "bersalin"
+                        ],
+                      };
+
                       // cek apakah kategori dari DB mengandung kata kunci dari tombol yang diklik
-                      final matchesCategory = selectedCategory == "All" || 
-                          p.category.toLowerCase().contains(selectedCategory.toLowerCase());
+                      final matchesCategory = selectedCategory == "All" || (categoryKeywords[selectedCategory] ?? []).any(
+                            (keyword) => p.category.toLowerCase().contains(keyword)
+                        );
 
                       // cek apakah nama tempat mengandung kata kunci pencarian
                       final matchesSearch = p.name.toLowerCase().contains(searchQuery);

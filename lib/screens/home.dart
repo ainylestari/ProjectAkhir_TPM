@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
 import '/screens/navigation.dart';
 import '../database.dart';
+import '../services/session.dart';
+import '../models/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int) action;
@@ -12,13 +14,22 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 class _HomeScreenState extends State<HomeScreen> {
+  UserModel? currentUser;
 
   @override
   void initState() {
     super.initState();
-
+    _loadUser();
     DatabaseHelper.instance.printAllDatabase();
   }
+
+  void _loadUser() async {
+    final user = await SessionManager().getUser();
+    if (!mounted) return;
+    setState(() {
+      currentUser = user;
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +42,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
 
             const SizedBox(height: 30),
-
-            const Text(
-              "Hi there 👋",
+  
+            Text(
+              "Hi there, ${currentUser?.username ?? 'User'} 👋",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,

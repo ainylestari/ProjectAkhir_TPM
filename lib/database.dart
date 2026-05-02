@@ -102,6 +102,15 @@ class DatabaseHelper {
         REFERENCES users (id)
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE high_scores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        emoji_type TEXT,
+        score INTEGER,
+        date TEXT
+      )
+    ''');
   }
 
   /// =====================================================
@@ -357,6 +366,27 @@ class DatabaseHelper {
       whereArgs: [userId],
       orderBy: 'date ASC, time ASC',
     );
+  }
+
+  /// =====================================================
+  /// GAME SECTION
+  /// =====================================================
+
+  // Fungsi untuk menyimpan skor baru
+  Future<int> insertScore(int score, String emoji) async {
+    Database db = await instance.database;
+    return await db.insert('high_scores', {
+      'emoji_type': emoji,
+      'score': score,
+      'date': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Fungsi untuk mengambil skor tertinggi (High Score)
+  Future<int> getGlobalHighScore() async {
+    Database db = await instance.database;
+    var result = await db.rawQuery('SELECT MAX(score) as max_score FROM high_scores');
+    return (result.first['max_score'] as int?) ?? 0;
   }
 
   /// =====================================================

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '/screens/recommendation.dart';
 import '/screens/navigation.dart';
 import '../database.dart';
+import '/screens/game.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int) action;
@@ -125,7 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Column(
               children: [
-                quickActionCard(Icons.auto_awesome_rounded, "AI Mood Chat", [Colors.indigo, Colors.indigoAccent.shade200]),
+                quickActionCard(
+                  Icons.auto_awesome_rounded, "AI Mood Chat", 
+                  [Colors.indigo, Colors.indigoAccent.shade200]),
                 
                 quickActionCard(
                   onTap: () => widget.action(1),
@@ -139,7 +142,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   [Colors.pink, Colors.pink.shade300],
                 ),
                 
-                quickActionCard(Icons.sports_esports, "Game", [Colors.orange.shade600, Colors.orange.shade300]),
+                quickActionCard(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => EmojiGameScreen()),
+                    );
+                  },
+                  Icons.sports_esports, "Game", 
+                  [Colors.orange.shade600, Colors.orange.shade300]),
               ],
             ),
           ],

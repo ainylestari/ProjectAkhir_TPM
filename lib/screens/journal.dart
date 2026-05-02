@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../database.dart';
-import 'journalDetail.dart';
+import 'journal_detail.dart';
+import '../services/session.dart';
+import '../models/user_model.dart';
 
 class JournalScreen extends StatefulWidget {
   const JournalScreen({super.key});
@@ -21,8 +23,11 @@ class _JournalScreenState extends State<JournalScreen> {
   }
 
   Future<void> fetchJournals() async {
-    final data = await dbHelper.getJournals();
+    final user = await SessionManager().getUser();
 
+    if (user == null) return;
+
+    final data = await dbHelper.getJournals(int.parse(user.id));
     setState(() {
       journals = data;
     });
@@ -120,7 +125,7 @@ class _JournalScreenState extends State<JournalScreen> {
                             gradient: LinearGradient(
                               colors: [
                                 Colors.white,
-                                Colors.purple.shade50,
+                                Colors.white,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,

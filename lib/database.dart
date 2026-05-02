@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
-
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -111,6 +112,39 @@ class DatabaseHelper {
         date TEXT
       )
     ''');
+    /// explore
+    await db.execute('''
+      CREATE TABLE explore (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        lat REAL NOT NULL,
+        lng REAL NOT NULL,
+        imagePath TEXT NOT NULL,
+        description TEXT
+      )
+    ''');
+
+    /*dummy
+    await db.insert('explore', {
+      'name': 'Ethikopia',
+      'category': 'Cafe',
+      'lat': -7.740338,
+      'lng': 110.358367,
+      'imagePath': 'https://example.com/kopi.jpg',
+      'description': 'Kopi'
+    });*/
+
+    /// chat history
+    await db.execute('''
+    CREATE TABLE chat_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL, 
+      role TEXT NOT NULL,
+      message TEXT NOT NULL,
+      timestamp TEXT NOT NULL
+    )
+  ''');
   }
 
   /// =====================================================
@@ -217,8 +251,7 @@ class DatabaseHelper {
   }
 
   /// GET ALL JOURNALS
-  Future<List<Map<String, dynamic>>>
-      getJournals() async {
+  Future<List<Map<String, dynamic>>>getJournals(int userId) async {
     final db = await database;
 
     return await db.query(
@@ -228,28 +261,18 @@ class DatabaseHelper {
   }
 
   /// GET JOURNAL BY ID
-  Future<Map<String, dynamic>?>
-      getJournalById(int id) async {
+  Future<List<Map<String, dynamic>>> getJournalsById(int userId) async {
     final db = await database;
-
-    final result = await db.query(
+    return await db.query(
       'journals',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'id DESC',
     );
-
-    if (result.isNotEmpty) {
-      return result.first;
-    }
-
-    return null;
   }
 
   /// UPDATE JOURNAL
-  Future<int> updateJournal(
-    int id,
-    Map<String, dynamic> journal,
-  ) async {
+  Future<int> updateJournal(int id, Map<String, dynamic> journal) async {
     final db = await database;
 
     return await db.update(
@@ -288,8 +311,7 @@ class DatabaseHelper {
   }
 
   /// GET ALL PLANNERS
-  Future<List<Map<String, dynamic>>>
-      getPlanners() async {
+  Future<List<Map<String, dynamic>>> getPlanners() async {
     final db = await database;
 
     return await db.query(
@@ -299,21 +321,14 @@ class DatabaseHelper {
   }
 
   /// GET PLANNER BY ID
-  Future<Map<String, dynamic>?>
-      getPlannerById(int id) async {
-    final db = await database;
-
-    final result = await db.query(
+  Future<List<Map<String, dynamic>>> getPlannersById(int userId) async {
+  final db = await database;
+    return await db.query(
       'planners',
-      where: 'id = ?',
-      whereArgs: [id],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'id DESC',
     );
-
-    if (result.isNotEmpty) {
-      return result.first;
-    }
-
-    return null;
   }
 
   /// UPDATE PLANNER
@@ -342,30 +357,37 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getPlannerByDate(
-    String date,
-  ) async {
+  Future<List<Map<String, dynamic>>> getPlannerByDate(String date, int userId) async {
     final db = await database;
-
     return await db.query(
       'planners',
-      where: 'date = ?',
-      whereArgs: [date],
+      where: 'date = ? AND user_id = ?',
+      whereArgs: [date, userId],
       orderBy: 'time ASC',
     );
   }
 
-  Future<List<Map<String, dynamic>>> getAllPlanner(
-    int userId,
-  ) async {
+  /// =====================================================
+  /// EXPLORE SECTION
+  /// =====================================================
+
+  Future<List<Map<String, dynamic>>> getExplore() async {
     final db = await database;
 
     return await db.query(
-      'planners',
-      where: 'user_id = ?',
-      whereArgs: [userId],
-      orderBy: 'date ASC, time ASC',
+      'explore',
+      orderBy: 'id DESC',
     );
+  }
+
+  Future<int> insertExplore(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('explore', row);
+  }
+
+  Future<void> clearExplore() async {
+    final db = await database;
+    await db.delete('explore');
   }
 
   /// =====================================================
@@ -391,8 +413,38 @@ class DatabaseHelper {
 
   /// =====================================================
   /// DEBUG PRINT DATABASE
+  /// CHAT HISTORY SECTION
   /// =====================================================
 
+  // save chat
+  Future<int> insertChat(Map<String, dynamic> chat) async {
+    final db = await database;
+    return await db.insert('chat_history', chat);
+  }
+
+  /// fetch history
+  Future<List<Map<String, dynamic>>> getChatHistory(String email) async {
+    final db = await database;
+    return await db.query(
+      'chat_history',
+      where: 'email = ?',
+      whereArgs: [email],
+      orderBy: 'timestamp ASC', // urut dari terlama ke terbaru
+    );
+  }
+
+  /// hapus semua chat
+  Future<int> clearChat(String email) async {
+    final db = await database;
+    return await db.delete(
+      'chat_history',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+  }
+
+  // ====================
+  // buat debug
   Future<void> printAllDatabase() async {
     final db = await database;
 
@@ -424,6 +476,16 @@ class DatabaseHelper {
 
     print("===== PLANNERS =====");
     print(planners);
+    print("====================\n");
+
+    /// EXPLORE
+    final explore = await db.query(
+      'explore',
+      orderBy: 'id DESC',
+    );
+
+    print("===== EXPLORE =====");
+    print(explore);
     print("====================\n");
   }
 

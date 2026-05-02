@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../database.dart';
+import '../models/user_model.dart';
+import '../services/session.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  final Map<String, dynamic> user;
+  final UserModel user;
 
   const EditProfileScreen({
     super.key,
@@ -41,19 +43,19 @@ class _EditProfileScreenState
     super.initState();
 
     fullNameController.text =
-        widget.user['username'] ?? '';
+        widget.user.username;
 
     emailController.text =
-        widget.user['email'] ?? '';
+        widget.user.email;
 
     phoneController.text =
-        widget.user['phone']?.toString() ?? '';
+        widget.user.phone?.toString() ?? '';
 
     locationController.text =
-        widget.user['location'] ?? '';
+        widget.user.location ?? '';
 
     imagePath =
-        widget.user['image'] ?? '';
+        widget.user.image ?? '';
   }
 
   Future<void> pickImage() async {
@@ -74,7 +76,7 @@ class _EditProfileScreenState
   Future<void> saveProfile() async {
     try {
       final int userId =
-          int.parse(widget.user['id'].toString());
+          int.parse(widget.user.id);
 
       final result = await dbHelper.updateUser(
         userId,
@@ -90,6 +92,15 @@ class _EditProfileScreenState
       if (!mounted) return;
 
       if (result > 0) {
+        await SessionManager().login(UserModel(
+          id: widget.user.id,
+          username: fullNameController.text.trim(),
+          email: emailController.text.trim(),
+          token: widget.user.token,
+          phone: phoneController.text.trim(),
+          location: locationController.text.trim(),
+          image: imagePath,
+        ));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Profile updated successfully"),

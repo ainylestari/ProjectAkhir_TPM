@@ -3,6 +3,9 @@ import '/screens/recommendation.dart';
 import '/screens/navigation.dart';
 import '../database.dart';
 import '/screens/game.dart';
+import '../services/session.dart';
+import '../models/user_model.dart';
+import '/screens/chats.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(int) action;
@@ -13,13 +16,22 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 class _HomeScreenState extends State<HomeScreen> {
+  UserModel? currentUser;
 
   @override
   void initState() {
     super.initState();
-
+    _loadUser();
     DatabaseHelper.instance.printAllDatabase();
   }
+
+  void _loadUser() async {
+    final user = await SessionManager().getUser();
+    if (!mounted) return;
+    setState(() {
+      currentUser = user;
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
 
             const SizedBox(height: 30),
-
-            const Text(
-              "Hi there 👋",
+  
+            Text(
+              "Hi there, ${currentUser?.username ?? 'User'} 👋",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -127,9 +139,17 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               children: [
                 quickActionCard(
-                  Icons.auto_awesome_rounded, "AI Mood Chat", 
-                  [Colors.indigo, Colors.indigoAccent.shade200]),
-                
+                  Icons.auto_awesome_rounded,
+                  "AI Mood Chat",
+                  [Colors.indigo, Colors.indigoAccent],
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ChatScreen(),
+                    ),
+                  ),
+                ),
+
                 quickActionCard(
                   onTap: () => widget.action(1),
                   Icons.location_on_rounded, "Explore Places",
@@ -151,6 +171,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   Icons.sports_esports, "Game", 
                   [Colors.orange.shade600, Colors.orange.shade300]),
+                quickActionCard(
+                  onTap: () => widget.action(2),
+                  Icons.sports_esports, "Game", 
+                  [Colors.orange.shade600, Colors.orange.shade300]
+                ),
               ],
             ),
           ],

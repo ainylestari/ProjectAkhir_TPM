@@ -1,0 +1,110 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+//import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
+
+class NotificationService {
+  static final FlutterLocalNotificationsPlugin _notifications =
+      FlutterLocalNotificationsPlugin();
+
+  static Future<void> showTestNotification() async {
+  await _notifications.show(
+    999,
+    "Test Notifikasi",
+    "Kalau ini muncul, setup sudah benar",
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'planner_channel',
+        'Planner Notifications',
+        channelDescription: 'Notifikasi pengingat planner',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+    ),
+  );
+  print("Test notifikasi dikirim");
+}
+
+  static Future<void> init() async {
+    tz_data.initializeTimeZones();;
+    tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
+
+    const AndroidInitializationSettings android =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings settings =
+        InitializationSettings(android: android);
+
+    await _notifications.initialize(settings);
+
+    await NotificationService.showTestNotification();
+
+    // minta permission
+    await _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+
+    final granted = await _notifications.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+    ?.requestNotificationsPermission();
+
+    print("Permission granted: $granted");
+  }
+
+  static Future<void> schedulePlannerNotification({
+    required int id,
+    required String title,
+    required String date, // format dd/MM/yyyy
+    required String time, // format HH:mm
+  }) async {
+    // parse tanggal dan waktu
+    final parts = date.split('/');
+    final timeParts = time.split(':');
+
+    final scheduledTime = tz.TZDateTime(
+      tz.local,
+      int.parse(parts[2]), // year
+      int.parse(parts[1]), // month
+      int.parse(parts[0]), // day
+      int.parse(timeParts[0]), // hour
+      int.parse(timeParts[1]), // minute
+    ).subtract(const Duration(seconds: 3)); // 1 jam sebelumnya
+
+    // kalau waktunya sudah lewat, skip
+    if (scheduledTime.isBefore(tz.TZDateTime.now(tz.local))) return;
+
+    try {
+      await _notifications.zonedSchedule(
+        id,
+        "MoodMate Reminder 🗓️",
+        "$title dimulai dalam 1 jam!",
+        scheduledTime,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'planner_channel',
+            'Planner Notifications',
+            channelDescription: 'Notifikasi pengingat planner',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      print("zonedSchedule berhasil dipanggil untuk id: $id");
+    } catch (e) {
+      print("ERROR zonedSchedule: $e");
+    }
+    // debug print
+    print("Waktu sekarang: ${tz.TZDateTime.now(tz.local)}");
+    print("Waktu notifikasi: $scheduledTime");
+    print("Sudah lewat: ${scheduledTime.isBefore(tz.TZDateTime.now(tz.local))}");
+  }
+
+  static Future<void> cancelNotification(int id) async {
+    await _notifications.cancel(id);
+  }
+
+  static Future<void> cancelAllNotifications() async {
+    await _notifications.cancelAll();
+  }
+}

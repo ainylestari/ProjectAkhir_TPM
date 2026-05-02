@@ -4,12 +4,15 @@ import 'screens/login.dart';
 import 'screens/register.dart';
 import 'screens/navigation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  await dotenv.load(fileName: ".env"); 
-  
+  await dotenv.load(fileName: ".env");
+
+  await NotificationService.init();
+
   runApp(const MyApp());
 } // baca .env sebelum run app, biar API key bisa dipakai
 

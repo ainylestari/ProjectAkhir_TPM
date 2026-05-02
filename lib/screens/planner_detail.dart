@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
 import '../services/session.dart';
+import '../services/notification_service.dart';
+
 class PlannerDetailScreen extends StatefulWidget {
   final DateTime plannerdetail;
   final Map<String, dynamic>? planner;
@@ -166,37 +168,36 @@ class _PlannerDetailScreenState
         return;
       }
 
-      final Map<String, dynamic>
-          data = {
-        "title":
-            titleController.text.trim(),
-        "description":
-            descriptionController.text
-                .trim(),
-        "time":
-            timeController.text.trim(),
+      final String plannerDate = isEdit 
+        ? widget.planner!['date'] 
+        : formatDate(widget.plannerdetail);
+
+      final Map<String, dynamic> data = {
+        "title": titleController.text.trim(),
+        "description": descriptionController.text.trim(),
+        "time": timeController.text.trim(),
         "period": selectedPeriod,
-        "budget":
-            budgetController.text.trim(),
-        "currency":
-            selectedCurrency,
-        "timezone":
-            selectedTimezone,
-        "date": isEdit
-            ? widget.planner!['date']
-            : formatDate(
-                widget.plannerdetail),
+        "budget": budgetController.text.trim(),
+        "currency": selectedCurrency,
+        "timezone": selectedTimezone,
+        "date": plannerDate,
         "user_id": int.parse(user.id),
       };
 
+      int result;
+      
       if (isEdit) {
-        await dbHelper.updatePlanner(
-          widget.planner!['id'],
-          data,
-        );
+        result = await dbHelper.updatePlanner(widget.planner!['id'], data);
       } else {
-        await dbHelper.insertPlanner(
-          data,
+        result = await dbHelper.insertPlanner(data);
+      }
+
+      if (result > 0) {
+        await NotificationService.schedulePlannerNotification(
+          id: result, // pakai result sebagai id notifikasi
+          title: titleController.text.trim(),
+          date: plannerDate,
+          time: timeController.text.trim(),
         );
       }
 

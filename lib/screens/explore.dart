@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/location_service.dart';
 import '../models/destination_model.dart';
 import '../services/session.dart';
+import '../database.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -30,7 +31,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    _nearbyFuture = _locationService.getNearbyRecommendations();
+    _clearAndFetch();
+  }
+
+  Future<void> _clearAndFetch() async {
+    await DatabaseHelper.instance.clearExplore();
+    setState(() {
+      _nearbyFuture = _locationService.getNearbyRecommendations();
+    });
   }
 
   @override
@@ -240,7 +248,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                                 fit: StackFit.expand,
                                 children: [
                                   Image.network(
-                                    place.imagePath,
+                                    place.imagePath.isNotEmpty ? place.imagePath : 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=500&auto=format&fit=crop',
                                     fit: BoxFit.cover,
                                     // gambar gagal dimuat, tampilkan placeholder
                                     errorBuilder: (context, error, stackTrace) {

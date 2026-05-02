@@ -61,7 +61,7 @@ class LocationService {
           'category': categoryName,
           'lat': element['latitude'] ?? 0.0,
           'lng': element['longitude'] ?? 0.0,
-          'imagePath': fsqImage,
+          'imagePath': '',
           'description': element['location']['formatted_address'] ?? 'Lokasi di sekitar kamu'
         });
       }
@@ -77,7 +77,7 @@ class LocationService {
 
       List<Destination> nearbyResult = [];
 
-      // filter destinasi radius 10km
+      // filter destinasi radius 15km
       for (var dest in allDestinations) {
         double distanceInMeters = Geolocator.distanceBetween(
           userPos.latitude, userPos.longitude, 

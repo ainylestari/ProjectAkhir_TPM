@@ -376,6 +376,11 @@ class DatabaseHelper {
     return await db.insert('explore', row);
   }
 
+  Future<void> clearExplore() async {
+    final db = await database;
+    await db.delete('explore');
+  }
+
   /// =====================================================
   /// CHAT HISTORY SECTION
   /// =====================================================

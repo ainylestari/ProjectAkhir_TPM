@@ -48,9 +48,26 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  // update db biar ga install ulang
+
+  Future<void> _upgradeDB(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
+      try {
+        await db.execute('ALTER TABLE journals ADD COLUMN insight TEXT;');
+      } catch (e) {
+        print("Kolom insight gagal ditambahkan: $e");
+      }
+    }
   }
 
   /// =========================
@@ -81,6 +98,7 @@ class DatabaseHelper {
         content TEXT NOT NULL,
         date TEXT NOT NULL,
         image TEXT,
+        insight TEXT,
         user_id INTEGER,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )

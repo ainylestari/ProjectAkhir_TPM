@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../database.dart';
 import '../services/session.dart';
-import '../models/user_model.dart';
+import '../services/chat_service.dart';
 
 class JournalDetailScreen extends StatefulWidget {
   final DateTime journaldetail;
@@ -27,6 +26,8 @@ class _JournalDetailScreenState
   final contentController = TextEditingController();
 
   bool isLoading = false;
+  String? insight;
+  bool isInsightLoading = false;
 
   /// cek apakah mode edit
   bool get isEdit => widget.journal != null;
@@ -42,6 +43,8 @@ class _JournalDetailScreenState
 
       contentController.text =
           widget.journal!['content'] ?? '';
+
+      insight = widget.journal!['insight'];
     }
   }
 
@@ -82,6 +85,7 @@ class _JournalDetailScreenState
         'content': content,
         'date': date,
         'image': '',
+        'insight': insight ?? '',
         'user_id': int.parse(user.id),
       };
 
@@ -132,6 +136,153 @@ class _JournalDetailScreenState
     );
   }
 
+  Future<void> generateInsight() async {
+    final content = contentController.text.trim();
+    if (content.isEmpty) {
+      showMessage("Isi jurnal terlebih dahulu untuk dirangkum!");
+      return;
+    }
+
+    setState(() {
+      isInsightLoading = true;
+    });
+
+    try {
+      final summary = await ChatService().summarizeJournal(content);
+      setState(() {
+        insight = summary;
+      });
+    } catch (e) {
+      showMessage("Gagal merangkum jurnal: $e");
+    } finally {
+      setState(() {
+        isInsightLoading = false;
+      });
+    }
+  }
+
+  Widget _buildInsightCard() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.purple.shade200,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.purple.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.purple,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                "MoodMate AI Insight",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.purple,
+                ),
+              ),
+              const Spacer(),
+              if (insight != null && !isInsightLoading)
+                IconButton(
+                  icon: const Icon(Icons.refresh, color: Colors.purple, size: 20),
+                  onPressed: generateInsight,
+                  tooltip: "Rangkum Ulang",
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (isInsightLoading)
+            const Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.purple,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  "Sedang merangkum jurnal...",
+                  style: TextStyle(
+                    color: Colors.purple,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            )
+          else if (insight == null || insight!.trim().isEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Isi jurnalmu untuk mendapatkan insight dari AI!",
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: generateInsight,
+                    icon: const Icon(Icons.psychology, size: 18),
+                    label: const Text("Rangkum Jurnal dengan AI"),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.purple,
+                      side: BorderSide(color: Colors.purple.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              insight!,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     titleController.dispose();
@@ -152,6 +303,12 @@ class _JournalDetailScreenState
               ? "Edit Journal"
               : "Write Journal",
         ),
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -169,7 +326,6 @@ class _JournalDetailScreenState
 
             const SizedBox(height: 20),
 
-            /// TITLE
             TextField(
               controller: titleController,
               decoration: InputDecoration(
@@ -184,7 +340,8 @@ class _JournalDetailScreenState
 
             const SizedBox(height: 20),
 
-            /// CONTENT
+            _buildInsightCard(),
+
             TextField(
               controller: contentController,
               maxLines: 8,
@@ -200,7 +357,6 @@ class _JournalDetailScreenState
 
             const SizedBox(height: 30),
 
-            /// SAVE / UPDATE BUTTON
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

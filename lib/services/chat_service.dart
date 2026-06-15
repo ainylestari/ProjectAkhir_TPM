@@ -41,7 +41,7 @@ class ChatService {
         return reply;
       } else {
         print("GROQ ERROR: ${response.body}");
-        return "Maaf, ada masalah koneksi. Coba lagi ya!";
+        return "Waduh, koneksi ke MoodMate AI lagi bermasalah nih. Coba lagi ya!";
       }
     } catch (e) {
       print("GROQ ERROR: $e");
